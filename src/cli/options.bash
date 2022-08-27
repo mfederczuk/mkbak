@@ -19,3 +19,7 @@
 #include options/crontab.bash
 #ignorenext
 . options/crontab.bash
+
+#include options/copy.bash
+#ignorenext
+. options/copy.bash
