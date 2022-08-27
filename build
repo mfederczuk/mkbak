@@ -1,0 +1,109 @@
+#!/bin/sh
+# -*- sh -*-
+# vim: set syntax=sh
+# code: language=shellscript
+
+# Copyright (c) 2022 Michael Federczuk
+# SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
+
+case "$-" in
+	(*'i'*)
+		if [ -n "${BASH_VERSION-}" ]; then
+			# using `eval` here in case a non-Bash shell tries to parse a branch even if the condition is false
+			\eval "\\printf '%s: ' \"\${BASH_SOURCE[0]}\" >&2"
+		fi
+
+		\echo 'script was called interactively' >&2
+		return 124
+		;;
+esac
+
+set -o errexit
+set -o nounset
+
+# enabling POSIX-compliant behavior for GNU programs
+export POSIXLY_CORRECT=yes POSIX_ME_HARDER=yes
+
+argv0() {
+	if [ "${0#/}" != "$0" ]; then
+		basename "$0"
+	else
+		printf '%s' "$0"
+	fi
+}
+
+
+for cmd in spp shellcheck; do
+	if ! command -v "$cmd" > '/dev/null'; then
+		echo "$(argv0): $cmd: program missing" >&2
+		exit 27
+	fi
+done
+unset -v cmd
+
+
+watch=false
+
+if [ $# -ge 1 ] && [ "$1" = '--watch' ]; then
+	if [ $# -gt 1 ]; then
+		echo "$(argv0): too many arguments: $(($# - 1))" >&2
+		exit 4
+	fi
+
+	watch=true
+elif [ $# -gt 0 ]; then
+	echo "$(argv0): too many arguments: $#" >&2
+	exit 4
+fi
+
+readonly watch
+
+
+if $watch && ! command -v inotifywait > '/dev/null'; then
+	echo "$(argv0): inotifywatch: program missing" >&2
+	exit 27
+fi
+
+
+root_dir_path="$(dirname "$0")"
+readonly root_dir_path
+
+build() {
+	spp "$root_dir_path/src/base.bash" > "$root_dir_path/mkbak"
+	chmod +x "$root_dir_path/mkbak"
+	shellcheck "$root_dir_path/mkbak"
+}
+
+
+if ! $watch; then
+	build
+	echo 'Done.' >&2
+	exit 0
+fi
+
+
+cancel() {
+	printf '\nExiting.\n'
+	exit 0
+}
+trap cancel INT
+
+while {
+	echo 'Watching...' >&2
+	inotifywait --recursive -qq \
+	            --event modify --event create --event delete \
+	            "$root_dir_path/src" || exit
+
+	echo 'Building...' >&2
+
+	exc=0
+	build || exc=$?
+
+	if [ $exc -eq 0 ]; then
+		echo 'Done.'
+	else
+		echo "Build failed with exit code $exc"
+	fi >&2
+	sleep 1
+	echo
+}; do :; done
