@@ -29,3 +29,7 @@ if [ -z "${BASH_VERSION-}" ]; then
 	echo 'GNU Bash is required to execute this script' >&2
 	exit 1
 fi
+
+#include utils.bash
+#ignorenext
+. utils.bash
