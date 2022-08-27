@@ -3,3 +3,4 @@
 external-sources=true
 
 source-path=src
+source-path=src/cli
