@@ -349,13 +349,13 @@ function cli_options_execute() {
 	case "$arg_spec" in
 		('none:')
 			if ((${#args_to_pass[@]} > 0)); then
-				errlog --no-origin "$(argv0): $origin: too many arguments: ${#args_to_pass[@]}"
+				usage_errlog --no-origin "$(argv0): $origin: too many arguments: ${#args_to_pass[@]}"
 				return 4
 			fi
 			;;
 		('required:'?*)
 			if ((${#args_to_pass[@]} == 0)); then
-				errlog --no-origin "$(argv0): $origin: missing argument: <${arg_spec#required:}>"
+				usage_errlog --no-origin "$(argv0): $origin: missing argument: <${arg_spec#required:}>"
 				return 3
 			fi
 			;;

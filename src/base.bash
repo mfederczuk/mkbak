@@ -37,3 +37,7 @@ fi
 #include version.bash
 #ignorenext
 . version.bash
+
+#include cli/cli.bash
+#ignorenext
+. cli/cli.bash

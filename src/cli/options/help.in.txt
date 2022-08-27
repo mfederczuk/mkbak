@@ -1,5 +1,4 @@
-usage: $(argv0) [-t] [-N] [-i <file>] [-o <archive>] [(-p <path>)...] [<path>...]
-   or: $(argv0) ( --list-transients | --clear-transients )
+#insert ../usage.in.txt
     Creates a gzipped tarball archive containing the given PATHs.
     Contents of directories are included recursively.
 
