@@ -15,3 +15,7 @@
 #include options/output.bash
 #ignorenext
 . options/output.bash
+
+#include options/crontab.bash
+#ignorenext
+. options/crontab.bash
