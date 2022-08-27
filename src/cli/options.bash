@@ -11,3 +11,7 @@
 #include options/input.bash
 #ignorenext
 . options/input.bash
+
+#include options/output.bash
+#ignorenext
+. options/output.bash
