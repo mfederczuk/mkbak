@@ -27,3 +27,7 @@
 #include options/transient.bash
 #ignorenext
 . options/transient.bash
+
+#include options/exec_mode.bash
+#ignorenext
+. options/exec_mode.bash
