@@ -33,3 +33,7 @@ fi
 #include utils.bash
 #ignorenext
 . utils.bash
+
+#include version.bash
+#ignorenext
+. version.bash
