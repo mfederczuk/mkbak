@@ -31,3 +31,7 @@
 #include options/exec_mode.bash
 #ignorenext
 . options/exec_mode.bash
+
+#include options/help.bash
+#ignorenext
+. options/help.bash

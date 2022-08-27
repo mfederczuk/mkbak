@@ -1,0 +1,67 @@
+usage: $(argv0) [-t] [-N] [-i <file>] [-o <archive>] [(-p <path>)...] [<path>...]
+   or: $(argv0) ( --list-transients | --clear-transients )
+    Creates a gzipped tarball archive containing the given PATHs.
+    Contents of directories are included recursively.
+
+    If a directory contains a '.nobak' file, the contents of that directory will be excluded, except when explicitly
+    added.
+    If a directory contains a '.nobakpattern' file, the patterns to exclude relative to that directory are read from
+    this file. Patterns are separated by newlines.
+
+    When no PATHs were given and neither the --input nor the --crontab options were specified, the default input file
+    will be used that is specified in the config file. (\$XDG_CONFIG_HOME/mkbak/mkbak.conf)
+    When no default input file is configured, the program will fail.
+
+    Options:
+      -i, --input=<file>      Read paths to archive from FILE. Paths are separated with newlines.
+                              When FILE is '-', read from stdin.
+
+      -o, --output=<file>     Write archive to FILE.
+                              When FILE is '-', write to stdout.
+                              Default is '<year>-<month>-<day>.tar.gz'.
+
+      -n, --crontab           Also archive the user's crontab. (default)
+      -N, --no-crontab        Don't archive the user's crontab.
+
+      -p, --copy=<dest>       Copy archive to DEST. DEST can be either a directory or file.
+                              This option can be specified multiple times.
+                              When the --output option is specified as '-' all --copy options are ignored.
+
+      -t, --transient         Make a transient backup. Ignored when --output is specified as '-'.
+      -T, --no-transient      Don't make a transient backup. (default)
+          --list-transients   List all currently saved transient backups and exit.
+          --clear-transients  Clear all currently saved transient backups and exit.
+
+      -h, --help              Show this summary and exit.
+      -V, --version           Show version and legal information and exit.
+
+    Transient Backups:
+      With the --transient option, the created archive will be a "transient backup".
+
+      The location of transient backup archives are cached in mkbak's cache directory. (\$XDG_CACHE_HOME/mkbak)
+      Once the maximum amount of transient backups is reached, creating a new transient backup will automatically remove
+      the oldest one, both the archive file and the metadata that was cached.
+
+      mkbak locates the archive files of transient backups using three metadata points:
+
+      * the files pathname
+      * the files hash sum
+      * the files inode number
+
+      Moving the archive file *should* not be a problem, as both the hash sum and inode number will stay the same,
+      though mkbak will take longer to execute since the entire filesystem must searched to locate the file again.
+
+      By default, the maximum amount of transient backups that will be kept is 3.
+      There is no rationale behind this number, I just felt like using it.
+
+    Config:
+      The mkbak config file is located at '\$XDG_CONFIG_HOME/mkbak/mkbak.conf'.
+      It's simple key-value dictionary storage where the following keys are recognized:
+
+      default_input_file_path (string/path)
+          The default input file to use when otherwise no paths to archive are given.
+
+      max_transient_backups (integer)
+          The amount of transient backups to keep cached at the same time.
+
+GitHub Repository: <https://github.com/mfederczuk/mkbak>
