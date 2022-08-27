@@ -35,3 +35,7 @@
 #include options/help.bash
 #ignorenext
 . options/help.bash
+
+#include options/version_info.bash
+#ignorenext
+. options/version_info.bash
