@@ -23,3 +23,7 @@
 #include options/copy.bash
 #ignorenext
 . options/copy.bash
+
+#include options/transient.bash
+#ignorenext
+. options/transient.bash
