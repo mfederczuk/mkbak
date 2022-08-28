@@ -41,3 +41,21 @@ fi
 #include cli/cli.bash
 #ignorenext
 . cli/cli.bash
+
+if [ -z "${HOME-}" ]; then
+	errlog 'HOME environment variable must not be empty'
+	exit 48
+fi
+
+if [[ ! "$HOME" =~ ^'/' ]]; then
+	errlog "$HOME: HOME environment variable must be an absolute path"
+	exit 49
+fi
+
+HOME="$(normalize_path "$HOME")"
+readonly HOME
+export HOME
+
+#include config.bash
+#ignorenext
+. config.bash
