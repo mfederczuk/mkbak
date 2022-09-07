@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
 #end-ignore
 
+# Prints the given message to standard error.
+#
 # $1: message (optional)
-# stderr: the given message or just a newline if the argument was omitted
+# stderr: the given message with an appended newline or just a newline if the argument was omitted
 function log() {
 	local message
 
@@ -32,6 +34,10 @@ function log() {
 }
 readonly -f log
 
+# Prints the given message to standard error, along with the "origin" of the message.
+# Outside of functions, the origin is the name of the program (see function `argv0`). Inside functions, the origin is
+# the name of that function.
+#
 #  $1: message
 # or
 #  $1: '--no-origin'
@@ -93,6 +99,8 @@ function errlog() {
 readonly -f errlog
 
 
+# Tests whether or not the given command exists.
+#
 # $1: command name
 # exit code: 0 if the given command exists, nonzero otherwise
 function command_exists() {
@@ -119,7 +127,9 @@ function command_exists() {
 readonly -f command_exists
 
 
-# Ensures that the given path is "safe", which means that it doesn't start with a dash character.
+# Ensures that the given path is "safe", which means that it doesn't start with a dash character, and writes it to
+# standard output.
+#
 # $1: path
 # stdout: the safe path
 function safepath() {
@@ -149,6 +159,8 @@ function safepath() {
 }
 readonly -f safepath
 
+# Writes the current working directory to standard output.
+#
 # stdout: the current working directory
 # <https://github.com/koalaman/shellcheck/issues/2492>
 # shellcheck disable=2120
@@ -170,7 +182,7 @@ function get_cwd() {
 }
 readonly -f get_cwd
 
-# Reads the contents of a symbolic link.
+# Reads the contents of a symbolic link and writes it to standard output.
 #
 # $1: path of the symlink
 # stdout: contents of the given symlink
@@ -312,7 +324,13 @@ function normalize_path() {
 readonly -f normalize_path
 
 
-# stdout: the name of the script (may or may not have an extra trailing newline)
+# Writes the basename or path of this script file to standard output.
+#
+# If $0 is an absolute path, only the basename of that path is written, otherwise $0 is written without change.
+# Rationale: When an executable file with a shebang is executed via the exec family of functions (i.e.: how shells
+# invoke programs) the absolute path of that file is passed to the (in the shebang defined) interpreter program.
+#
+# stdout: the name of this script file
 # <https://github.com/koalaman/shellcheck/issues/2492>
 # shellcheck disable=2120
 function argv0() {
@@ -341,6 +359,10 @@ function argv0() {
 readonly -f argv0
 
 
+# Prints a given message to standard error and then prompts the user for a boolean yes/no answer.
+# The given message should end with a question mark but should not contain any trailing whitespace or an "input hint"
+# that most of the time takes a form of "(y/n)", "[Y/n]" or "[y/N]" as it will be added automatically.
+#
 # $1: message
 # $2: default answer, must be 'default=yes' or 'default=no'
 # exit code: zero if the answer was yes, 32 if the answer was no
