@@ -170,6 +170,60 @@ function get_cwd() {
 }
 readonly -f get_cwd
 
+# Reads the contents of a symbolic link.
+#
+# $1: path of the symlink
+# stdout: contents of the given symlink
+function readlink_portable() {
+	local path
+
+	case $# in
+		(0)
+			errlog 'missing argument: <symlink>'
+			return 3
+			;;
+		(1)
+			path="$1"
+			;;
+		(*)
+			errlog "too many arguments: $(($# - 1))"
+			return 4
+			;;
+	esac
+
+	if [ -z "$path" ]; then
+		errlog 'argument must not be empty'
+		return 9
+	fi
+
+	if [ ! -L "$path" ]; then
+		errlog "$path: not a symlink"
+		return 26
+	fi
+
+	path="$(safepath "$1" && printf x)"
+	path="${path%x}"
+	readonly path
+
+	# this is rather complicated because POSIX doesn't specifiy a proper utiltiy to read a symlink's target, only `ls`
+	# is capable of it
+
+	local ls_out
+	ls_out="$(LC_ALL=POSIX LC_CTYPE=POSIX LC_TIME=POSIX ls -dn "$path" && printf x)"
+	ls_out="${ls_out%$'\nx'}"
+
+	# removing <file mode>, <number of links>, <owner name>, <group name>, <size> and <date and time> (where both
+	# <owner name> and <group name> are their associated numeric values because of the '-n' option given to `ls`)
+	if [[ ! "$ls_out" =~ ^([^[:space:]$' \t']+[[:space:]$' \t']+[0-9]+' '+[0-9]+' '+[0-9]+' '+[0-9]+' '+[A-Za-z]+' '+[0-9]+' '+([0-9]+':'[0-9]+|[0-9]+)' '+"$path -> ") ]]; then
+		errlog 'emergency stop: unexpected output of ls'
+		return 123
+	fi
+	ls_out="${ls_out#"${BASH_REMATCH[1]}"}"
+
+	printf '%s' "$ls_out"
+}
+readonly -f readlink_portable
+
 # Normalizes a path - which means:
 #  * if it isn't already, makes the path absolute by inserting the current working directory plus a slash at the start
 #    of the path
@@ -267,15 +321,22 @@ function argv0() {
 		return 4
 	fi
 
-	if [[ "$0" =~ ^'/' ]]; then
-		local path
-		path="$(safepath "$0")"
-		readonly path
-
-		basename "$path"
-	else
+	if [[ ! "$0" =~ ^'/' ]]; then
 		printf '%s' "$0"
+		return
 	fi
+
+	local path
+	path="$(safepath "$0" && printf x)"
+	path="${path%x}"
+	readonly path
+
+	local basename
+	basename="$(basename "$path" && printf x)"
+	basename="${basename%$'\nx'}"
+	readonly basename
+
+	printf '%s' "$basename"
 }
 readonly -f argv0
 
