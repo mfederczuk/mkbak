@@ -9,7 +9,7 @@
 case "$-" in
 	(*'i'*)
 		if \command test -n "${BASH_VERSION-}"; then
-			# using `eval` here in case a non-Bash shell tries to parse a branch even if the condition is false
+			# using `eval` here in case a non-Bash shell tries to parse this branch even if the condition is false
 			\command eval "\\command printf '%s: ' \"\${BASH_SOURCE[0]}\" >&2"
 		fi
 
