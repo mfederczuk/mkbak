@@ -8,12 +8,12 @@
 
 case "$-" in
 	(*'i'*)
-		if [ -n "${BASH_VERSION-}" ]; then
+		if \command test -n "${BASH_VERSION-}"; then
 			# using `eval` here in case a non-Bash shell tries to parse a branch even if the condition is false
-			\eval "\\printf '%s: ' \"\${BASH_SOURCE[0]}\" >&2"
+			\command eval "\\command printf '%s: ' \"\${BASH_SOURCE[0]}\" >&2"
 		fi
 
-		\echo 'script was called interactively' >&2
+		\command echo 'script was called interactively' >&2
 		return 124
 		;;
 esac
