@@ -8,12 +8,12 @@
 
 case "$-" in
 	(*'i'*)
-		if [ -n "${BASH_VERSION-}" ]; then
-			# using `eval` here in case a non-Bash shell tries to parse a branch even if the condition is false
-			\eval "\\printf '%s: ' \"\${BASH_SOURCE[0]}\" >&2"
+		if \command test -n "${BASH_VERSION-}"; then
+			# using `eval` here in case a non-Bash shell tries to parse this branch even if the condition is false
+			\command eval "\\command printf '%s: ' \"\${BASH_SOURCE[0]}\" >&2"
 		fi
 
-		\echo 'script was called interactively' >&2
+		\command printf 'script was called interactively\n' >&2
 		return 124
 		;;
 esac
@@ -24,18 +24,43 @@ set -o nounset
 # enabling POSIX-compliant behavior for GNU programs
 export POSIXLY_CORRECT=yes POSIX_ME_HARDER=yes
 
-argv0() {
-	if [ "${0#/}" != "$0" ]; then
-		basename "$0"
-	else
-		printf '%s' "$0"
-	fi
+if [ "${0#/}" = "$0" ]; then
+	argv0="$0"
+else
+	argv0="$(basename -- "$0" && printf x)"
+	argv0="${argv0%"$(printf '\nx')"}"
+fi
+readonly argv0
+
+
+print_usage() {
+	printf 'usage: %s [ --help | --watch ]\n' "$argv0" >&2
 }
+
+for arg in "$@"; do
+	if [ "$arg" = '--help' ]; then
+		print_usage
+		{
+			printf '    Builds the mkbak script.\n'
+			printf '\n'
+			printf "    Both the programs 'spp' and 'shellcheck' are required to be installed.\\n"
+			printf '\n'
+			printf '    Options:\n'
+			printf '      --help   Display this summary and exit successfully.\n'
+			printf '\n'
+			printf '      --watch  Watch the source directory recursively and rebuild the script\n'
+			printf '               when changes occur in it.\n'
+			printf "               The program 'inotifywait' is required for this.\n"
+		} >&2
+		exit 0
+	fi
+done
+unset -v arg
 
 
 for cmd in spp shellcheck; do
 	if ! command -v "$cmd" > '/dev/null'; then
-		echo "$(argv0): $cmd: program missing" >&2
+		printf '%s: %s: program missing\n' "$argv0" "$cmd" >&2
 		exit 27
 	fi
 done
@@ -46,64 +71,70 @@ watch=false
 
 if [ $# -ge 1 ] && [ "$1" = '--watch' ]; then
 	if [ $# -gt 1 ]; then
-		echo "$(argv0): too many arguments: $(($# - 1))" >&2
+		printf '%s: too many arguments: %i\n' "$argv0" $(($# - 1)) >&2
+		print_usage
 		exit 4
 	fi
 
 	watch=true
 elif [ $# -gt 0 ]; then
-	echo "$(argv0): too many arguments: $#" >&2
+	printf '%s: too many arguments: %i\n' "$argv0" $# >&2
+	print_usage
 	exit 4
 fi
 
 readonly watch
 
-
 if $watch && ! command -v inotifywait > '/dev/null'; then
-	echo "$(argv0): inotifywatch: program missing" >&2
+	printf '%s: inotifywatch: program missing\n' "$argv0" >&2
 	exit 27
 fi
 
 
-root_dir_path="$(dirname "$0")"
-readonly root_dir_path
+root_dir_pathname="$(dirname -- "$0")"
+readonly root_dir_pathname
+
+src_dir_pathname="$root_dir_pathname/src"
+readonly src_dir_pathname
+
+mkbak_target_file_pathname="$root_dir_pathname/mkbak"
+readonly mkbak_target_file_pathname
 
 build() {
-	spp "$root_dir_path/src/base.bash" > "$root_dir_path/mkbak"
-	chmod +x "$root_dir_path/mkbak"
-	shellcheck "$root_dir_path/mkbak"
+	spp "$src_dir_pathname/base.bash" > "$mkbak_target_file_pathname" || return
+	chmod +x "$mkbak_target_file_pathname" || return
+	shellcheck "$mkbak_target_file_pathname"
 }
 
 
 if ! $watch; then
 	build
-	echo 'Done.' >&2
+	printf 'Done.\n' >&2
 	exit 0
 fi
 
 
 cancel() {
-	printf '\nExiting.\n'
+	printf '\nExiting.\n' >&2 || return
 	exit 0
 }
-trap cancel INT
+trap cancel TERM INT QUIT
 
-while {
-	echo 'Watching...' >&2
-	inotifywait --recursive -qq \
-	            --event modify --event create --event delete \
-	            "$root_dir_path/src" || exit
-
-	echo 'Building...' >&2
+while true; do
+	printf 'Building...\n' >&2
 
 	exc=0
 	build || exc=$?
 
 	if [ $exc -eq 0 ]; then
-		echo 'Done.'
+		printf 'Done.\n' >&2
 	else
-		echo "Build failed with exit code $exc"
-	fi >&2
+		printf 'Build failed with exit code %i\n' $exc >&2
+	fi
 	sleep 1
-	echo
-}; do :; done
+
+	printf '\nWatching...\n' >&2
+	inotifywait --recursive -qq \
+	            --event modify --event create --event delete \
+	            "$src_dir_pathname"
+done
