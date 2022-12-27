@@ -20,7 +20,6 @@ esac
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
 # enabling POSIX-compliant behavior for GNU programs
 export POSIXLY_CORRECT=yes POSIX_ME_HARDER=yes
@@ -29,6 +28,8 @@ if [ -z "${BASH_VERSION-}" ]; then
 	printf 'GNU Bash is required to execute this script\n' >&2
 	exit 1
 fi
+
+set -o pipefail
 
 #include utils.bash
 #ignorenext
