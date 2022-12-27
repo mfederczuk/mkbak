@@ -13,7 +13,7 @@ case "$-" in
 			\command eval "\\command printf '%s: ' \"\${BASH_SOURCE[0]}\" >&2"
 		fi
 
-		\command echo 'script was called interactively' >&2
+		\command printf 'script was called interactively\n' >&2
 		return 124
 		;;
 esac
@@ -26,7 +26,7 @@ set -o pipefail
 export POSIXLY_CORRECT=yes POSIX_ME_HARDER=yes
 
 if [ -z "${BASH_VERSION-}" ]; then
-	echo 'GNU Bash is required to execute this script' >&2
+	printf 'GNU Bash is required to execute this script\n' >&2
 	exit 1
 fi
 
