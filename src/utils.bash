@@ -99,6 +99,46 @@ function errlog() {
 readonly -f errlog
 
 
+
+# Tests whether or not a string starts with another substring.
+#
+# $1: base string
+# $2: substring
+# exit code: 0 if the given base string starts with the given substring, nonzero otherwise
+function starts_with() {
+	local base_string substring
+
+	case $# in
+		(0)
+			errlog 'missing arguments: <base_string> <substring>'
+			return 3
+			;;
+		(1)
+			errlog 'missing argument: <substring>'
+			return 3
+			;;
+		(2)
+			base_string="$1"
+			substring="$2"
+			;;
+		(*)
+			errlog "too many arguments: $(($# - 2))"
+			return 4
+			;;
+	esac
+
+	readonly substring base_string
+
+
+	if [[ "$base_string" =~ ^"$substring" ]]; then
+		return 0
+	fi
+
+	return 32
+}
+readonly -f starts_with
+
+
 # Tests whether or not the given command exists.
 #
 # $1: command name

@@ -48,7 +48,7 @@ if [ -z "${HOME-}" ]; then
 	exit 48
 fi
 
-if [[ ! "$HOME" =~ ^'/' ]]; then
+if ! starts_with "$HOME" '/'; then
 	errlog "$HOME: HOME environment variable must be an absolute path"
 	exit 49
 fi
