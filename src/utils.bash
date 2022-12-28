@@ -344,14 +344,9 @@ function get_cwd() {
 		return 4
 	fi
 
-	# pwd(1p) always prints an additional newline, so we need to trim it
-	# now, normally command substition like this $(cmd) automatically trims trailing newline, but it trims *all*
-	# trailing newlines, meaning that if the CWD ends with any amount newlines, these would also be trimmed, so we need
-	# to disable this automatic newline trimming, and then manually trim the additional newline from pwd(1p)
-
 	local cwd
-	cwd="$(pwd -L && printf x)" # this prevents the automatic newline trimming because with this, the newlines aren't
-	cwd="${cwd%$'\nx'}"         # the trailing characters anymore, the 'x' is
+	cwd="$(pwd -L && printf x)"
+	cwd="${cwd%$'\nx'}"
 	printf '%s' "$cwd"
 }
 readonly -f get_cwd
