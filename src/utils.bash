@@ -142,6 +142,83 @@ function starts_with() {
 }
 readonly -f starts_with
 
+# Repeatedly replaces the given search substring with the given replace substring in the given base string, until
+# no more instances of the search substring exist.
+#
+# If the search substring is contained in the replace substring, then this functions fails because otherwise it would
+# cause an infinite loop.
+#
+# $1: base string
+# $2: search substring
+# $3: replace substring
+# stdout: the base string, with all search substrings replaced by the replace substring
+function repeat_replace() {
+	local base_string search_substring replace_substring
+
+	case $# in
+		(0)
+			errlog 'missing arguments: <base_string> <search_substring> <replace_substring>'
+			return 3
+			;;
+		(1)
+			errlog 'missing arguments: <search_substring> <replace_substring>'
+			return 3
+			;;
+		(2)
+			errlog 'missing argument: <replace_substring>'
+			return 3
+			;;
+		(3)
+			base_string="$1"
+			search_substring="$2"
+			replace_substring="$3"
+			;;
+		(*)
+			errlog "too many arguments: $(($# - 3))"
+			return 4
+			;;
+	esac
+
+	readonly replace_substring search_substring base_string
+
+
+	# shellcheck disable=2076
+	if [[ "$replace_substring" =~ "$search_substring" ]]; then
+		errlog "refusing to continue because the search substring ($search_substring) is contained in the replace substring ($replace_substring)"
+		return 13
+	fi
+
+
+	local replaced_string
+	replaced_string="$base_string"
+
+	local repeat
+	repeat=true
+
+	while $repeat; do
+		local old_replaced_string
+		old_replaced_string="$replaced_string"
+
+		replaced_string="${replaced_string//"$search_substring"/"$replace_substring"}"
+
+		if [ "$replaced_string" != "$old_replaced_string" ]; then
+			repeat=true
+		else
+			repeat=false
+		fi
+
+		unset -v old_replaced_string
+	done
+
+	unset -v repeat
+
+	readonly replaced_string
+
+
+	printf '%s' "$replaced_string"
+}
+readonly -f repeat_replace
+
 # Squeezes any and all substrings, which consist of two or more instances of the same given character, into
 # a single instance of that character in the given base string.
 #
@@ -187,33 +264,7 @@ function squeeze() {
 	readonly char base_string
 
 
-	local squeezed_string
-	squeezed_string="$base_string"
-
-	local repeat
-	repeat=true
-
-	while $repeat; do
-		local old_squeezed_string
-		old_squeezed_string="$squeezed_string"
-
-		squeezed_string="${squeezed_string//"${char}${char}"/"$char"}"
-
-		if [ "$squeezed_string" != "$old_squeezed_string" ]; then
-			repeat=true
-		else
-			repeat=false
-		fi
-
-		unset -v old_squeezed_string
-	done
-
-	unset -v repeat
-
-	readonly squeezed_string
-
-
-	printf '%s' "$squeezed_string"
+	repeat_replace "$base_string" "${char}${char}" "$char"
 }
 readonly -f squeeze
 
