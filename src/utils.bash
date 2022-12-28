@@ -102,6 +102,7 @@ readonly -f errlog
 
 #endregion
 
+#region string utils
 
 # Tests whether or not a string starts with another substring.
 #
@@ -140,6 +141,83 @@ function starts_with() {
 	return 32
 }
 readonly -f starts_with
+
+# Squeezes any and all substrings, which consist of two or more instances of the same given character, into
+# a single instance of that character in the given base string.
+#
+# $1: base string
+# $2: character to squeeze
+# stdout: the base string, with the given character squeezed
+function squeeze() {
+	local base_string char
+
+	case $# in
+		(0)
+			errlog 'missing arguments: <base_string> <char>'
+			return 3
+			;;
+		(1)
+			errlog 'missing argument: <char>'
+			return 3
+			;;
+		(2)
+			case "$2" in
+				('')
+					errlog 'argument 2: must not be empty'
+					return 9
+					;;
+				(?)
+					# ok
+					;;
+				(??*)
+					errlog "$2: invalid argument: must not be more than one character long"
+					return 7
+					;;
+			esac
+
+			base_string="$1"
+			char="$2"
+			;;
+		(*)
+			errlog "too many arguments: $(($# - 2))"
+			return 4
+			;;
+	esac
+
+	readonly char base_string
+
+
+	local squeezed_string
+	squeezed_string="$base_string"
+
+	local repeat
+	repeat=true
+
+	while $repeat; do
+		local old_squeezed_string
+		old_squeezed_string="$squeezed_string"
+
+		squeezed_string="${squeezed_string//"${char}${char}"/"$char"}"
+
+		if [ "$squeezed_string" != "$old_squeezed_string" ]; then
+			repeat=true
+		else
+			repeat=false
+		fi
+
+		unset -v old_squeezed_string
+	done
+
+	unset -v repeat
+
+	readonly squeezed_string
+
+
+	printf '%s' "$squeezed_string"
+}
+readonly -f squeeze
+
+#endregion
 
 
 # Tests whether or not the given command exists.
