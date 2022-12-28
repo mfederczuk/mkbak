@@ -10,7 +10,8 @@ declare output_archive_target
 output_archive_target="file:$(date +'%Y-%M-%d').tar.gz"
 
 function cli_opt_output() {
-	local -r origin="$1" path="$2"
+	local -r origin="$1"
+	local path="$2"
 
 	case "$path" in
 		('')
@@ -21,7 +22,9 @@ function cli_opt_output() {
 			output_archive_target='stdout:'
 			;;
 		(*)
-			path="$(normalize_path "$path")"
+			path="$(normalize_pathname "$path" && printf x)"
+			path="${path%x}"
+
 			output_archive_target="file:$path"
 			;;
 	esac

@@ -410,32 +410,24 @@ function readlink_portable() {
 }
 readonly -f readlink_portable
 
-# Normalizes a path - which means:
-#  * if it isn't already, makes the path absolute by inserting the current working directory plus a slash at the start
-#    of the path
-#  * '.' components are removed
-#  * '..' components and the component behind them are removed
-#  * multiple slashes are squeezed to one
-#  * trailing slashes are removed
+# Normalizes the given pathname and writes it to the standard output.
 #
-# This function only operates on the given path string and won't query the filesystem for any other information.
-# (excluding the current working directory) e.g.: it's not an error to treat non-directories components as directories,
-# symlinks arent't followed, etc.
+# Normalization is done by squeezing multiple slashes into one and by removing all unnecessary '.' pathname components.
 #
-# If the given path is empty, nothing is written to stdout. (i.e.: the same empty path is returned)
+# If the given pathname is empty, nothing / the same empty pathname is written to the standard output.
 #
-# $1: path
-# stdout: the normalized path, or nothing if the given path is empty
-function normalize_path() {
-	local path
+# $1: the pathname to normalize
+# stdout: the normalized pathname, or nothing if the given argument is empty
+function normalize_pathname() {
+	local pathname
 
 	case $# in
 		(0)
-			errlog 'missing arguments: <path>'
+			errlog 'missing argument: <pathname>'
 			return 3
 			;;
 		(1)
-			path="$1"
+			pathname="$1"
 			;;
 		(*)
 			errlog "too many arguments: $(($# - 1))"
@@ -443,59 +435,37 @@ function normalize_path() {
 			;;
 	esac
 
-	if [ -z "$path" ]; then
+	readonly pathname
+
+
+	if [ -z "$pathname" ]; then
 		return 0
 	fi
 
-	# ensure that the path is absolute
-	if [[ ! "$path" =~ ^'/' ]]; then
-		local cwd
-		cwd="$(get_cwd && printf x)"
-		cwd="${cwd%x}"
 
-		path="$cwd/$path"
+	local normalized_pathname
+	normalized_pathname="$pathname"
 
-		unset -v cwd
+	normalized_pathname="$(squeeze "$normalized_pathname" '/' && printf x)"
+	normalized_pathname="${normalized_pathname%x}"
+
+	normalized_pathname="$(repeat_replace "$normalized_pathname" '/./' '/' && printf x)"
+	normalized_pathname="${normalized_pathname%x}"
+
+	if [[ "$normalized_pathname" =~ ^'./'(.+)$ ]]; then
+		normalized_pathname="${BASH_REMATCH[1]}"
 	fi
 
-	# ensure that the path ends with a slash so that we don't a special case of the end of the loop
-	path+='/'
+	if [[ "$normalized_pathname" =~ ^(.*'/')'.'$ ]]; then
+		normalized_pathname="${BASH_REMATCH[1]}"
+	fi
 
-	local -a normalized_path
-	normalized_path=''
+	readonly normalized_pathname
 
-	local component
-	component=''
 
-	local -i i
-	for ((i = 0; i < ${#path}; ++i)); do
-		local ch
-		ch="${path:i:1}"
-
-		if [ "$ch" != '/' ]; then
-			component+="$ch"
-		else
-			if [ "$component" = '..' ]; then
-				if [[ "$normalized_path" =~ ('/'[^'/']+)$ ]]; then
-					normalized_path="${normalized_path%"${BASH_REMATCH[1]}"}"
-				fi
-			elif [ "$component" != '.' ] && [ -n "$component" ]; then
-				normalized_path+="/$component"
-			fi
-
-			component=''
-		fi
-
-		unset -v ch
-	done
-	unset -v i \
-	         component
-
-	readonly normalized_path
-
-	printf '%s' "${normalized_path:-/}"
+	printf '%s' "$normalized_pathname"
 }
-readonly -f normalize_path
+readonly -f normalize_pathname
 
 #endregion
 

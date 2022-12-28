@@ -22,7 +22,8 @@ function cli_opt_copy() {
 		force_dir=true
 	fi
 
-	path="$(normalize_path "$path")"
+	path="$(normalize_pathname "$path" && printf x)"
+	path="${path%x}"
 
 	if $force_dir; then
 		path+='/'

@@ -53,7 +53,8 @@ if ! starts_with "$HOME" '/'; then
 	exit 49
 fi
 
-HOME="$(normalize_path "$HOME")"
+HOME="$(normalize_pathname "$HOME" && printf x)"
+HOME="${HOME%x}"
 readonly HOME
 export HOME
 

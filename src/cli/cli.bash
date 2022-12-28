@@ -135,9 +135,13 @@ for ((cli_arg_i = 0; cli_arg_i < $#; ++cli_arg_i)); do
 		fi
 	fi
 
-	arg="$(normalize_path "$arg")"
-	bak_paths+=("$arg")
+	declare pathname
+	pathname="$(normalize_pathname "$arg" && printf x)"
+	pathname="${pathname%x}"
 
+	bak_paths+=("$pathname")
+
+	unset -v pathname
 	unset -v arg
 done
 

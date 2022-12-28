@@ -9,7 +9,8 @@
 declare bak_paths_input_source='default:'
 
 function cli_opt_input() {
-	local -r origin="$1" path="$2"
+	local -r origin="$1"
+	local path="$2"
 
 	case "$path" in
 		('')
@@ -20,7 +21,9 @@ function cli_opt_input() {
 			bak_paths_input_source='stdin:'
 			;;
 		(*)
-			path="$(normalize_path "$path")"
+			path="$(normalize_pathname "$path" && printf x)"
+			path="${path%x}"
+
 			bak_paths_input_source="file:$path"
 			;;
 	esac

@@ -6,7 +6,8 @@
 declare xdg_config_home
 if [ -n "${XDG_CONFIG_HOME-}" ]; then
 	xdg_config_home="$XDG_CONFIG_HOME"
-	xdg_config_home="$(normalize_path "$xdg_config_home")"
+	xdg_config_home="$(normalize_pathname "$xdg_config_home" && printf x)"
+	xdg_config_home="${xdg_config_home%x}"
 else
 	xdg_config_home="$HOME/.config"
 fi
