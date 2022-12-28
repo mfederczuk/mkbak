@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
 #end-ignore
 
+#region logging
+
 # Prints the given message to standard error.
 #
 # $1: message (optional)
@@ -98,6 +100,7 @@ function errlog() {
 }
 readonly -f errlog
 
+#endregion
 
 
 # Tests whether or not a string starts with another substring.
@@ -166,6 +169,8 @@ function command_exists() {
 }
 readonly -f command_exists
 
+
+#region pathname utils
 
 # Ensures that the given path is "safe", which means that it doesn't start with a dash character, and writes it to
 # standard output.
@@ -362,6 +367,8 @@ function normalize_path() {
 	printf '%s' "${normalized_path:-/}"
 }
 readonly -f normalize_path
+
+#endregion
 
 
 # Writes the basename or path of this script file to standard output.
