@@ -67,6 +67,7 @@ if [ -z "${BASH_VERSION-}" ]; then
 fi
 
 set -o pipefail
+shopt -s nullglob
 
 #include utils.bash
 #ignorenext
