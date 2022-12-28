@@ -302,38 +302,6 @@ readonly -f command_exists
 
 #region pathname utils
 
-# Ensures that the given path is "safe", which means that it doesn't start with a dash character, and writes it to
-# standard output.
-#
-# $1: path
-# stdout: the safe path
-function safepath() {
-	local path
-
-	case $# in
-		(0)
-			errlog 'missing argument: <path>'
-			return 3
-			;;
-		(1)
-			path="$1"
-			;;
-		(*)
-			errlog "too many arguments: $(($# - 1))"
-			return 4
-			;;
-	esac
-
-	readonly path
-
-	if [[ "$1" =~ ^'-' ]]; then
-		printf './%s' "$path"
-	else
-		printf '%s' "$path"
-	fi
-}
-readonly -f safepath
-
 # Writes the current working directory to standard output.
 #
 # stdout: the current working directory
@@ -373,6 +341,8 @@ function readlink_portable() {
 			;;
 	esac
 
+	readonly path
+
 	if [ -z "$path" ]; then
 		errlog 'argument must not be empty'
 		return 9
@@ -383,15 +353,11 @@ function readlink_portable() {
 		return 26
 	fi
 
-	path="$(safepath "$1" && printf x)"
-	path="${path%x}"
-	readonly path
-
 	# this is rather complicated because POSIX doesn't specifiy a proper utiltiy to read a symlink's target, only `ls`
 	# is capable of it
 
 	local ls_out
-	ls_out="$(LC_ALL=POSIX LC_CTYPE=POSIX LC_TIME=POSIX ls -dn "$path" && printf x)"
+	ls_out="$(LC_ALL=POSIX LC_CTYPE=POSIX LC_TIME=POSIX ls -dn -- "$path" && printf x)"
 	ls_out="${ls_out%$'\nx'}"
 
 	# removing <file mode>, <number of links>, <owner name>, <group name>, <size> and <date and time> (where both
