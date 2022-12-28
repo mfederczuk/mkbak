@@ -17,12 +17,12 @@ function log() {
 			message=''
 			;;
 		(1)
-			message="$1"
-
-			if [ -z "$message" ]; then
+			if [ -z "$1" ]; then
 				errlog 'argument must not be empty'
 				return 9
 			fi
+
+			message="$1"
 			;;
 		(*)
 			errlog "too many arguments: $(($# - 1))"
@@ -31,6 +31,7 @@ function log() {
 	esac
 
 	readonly message
+
 
 	printf '%s\n' "$message" >&2
 }
@@ -61,13 +62,13 @@ function errlog() {
 				return 3
 				;;
 			(2)
-				prefix=''
-
-				message="$2"
-				if [ -z "$message" ]; then
+				if [ -z "$2" ]; then
 					errlog 'argument 2: must not be empty'
 					return 9
 				fi
+
+				prefix=''
+				message="$2"
 				;;
 			(*)
 				errlog "too many arguments: $(($# - 2))"
@@ -80,6 +81,7 @@ function errlog() {
 			return 4
 		fi
 
+
 		if ((${#FUNCNAME[@]} > 2)); then
 			prefix="${FUNCNAME[1]}"
 		else
@@ -88,14 +90,16 @@ function errlog() {
 		fi
 		prefix+=': '
 
-		message="$1"
-		if [ -z "$message" ]; then
+
+		if [ -z "$1" ]; then
 			errlog 'argument must not be empty'
 			return 9
 		fi
+		message="$1"
 	fi
 
 	readonly message prefix
+
 
 	log "${prefix}${message}"
 }
@@ -285,6 +289,11 @@ function command_exists() {
 			return 3
 			;;
 		(1)
+			if [ -z "$1" ]; then
+				errlog 'argument must not be empty'
+				return 9
+			fi
+
 			command_name="$1"
 			;;
 		(*)
@@ -294,6 +303,7 @@ function command_exists() {
 	esac
 
 	readonly command_name
+
 
 	command -v "$command_name" > '/dev/null'
 }
@@ -313,19 +323,22 @@ function get_cwd() {
 		return 4
 	fi
 
+
 	local cwd
 	cwd="$(pwd -L && printf x)"
 	cwd="${cwd%$'\nx'}"
+	readonly cwd
+
 	printf '%s' "$cwd"
 }
 readonly -f get_cwd
 
 # Reads the contents of a symbolic link and writes it to standard output.
 #
-# $1: path of the symlink
+# $1: pathname of the symlink
 # stdout: contents of the given symlink
 function readlink_portable() {
-	local path
+	local pathname
 
 	case $# in
 		(0)
@@ -333,7 +346,12 @@ function readlink_portable() {
 			return 3
 			;;
 		(1)
-			path="$1"
+			if [ -z "$1" ]; then
+				errlog 'argument must not be empty'
+				return 9
+			fi
+
+			pathname="$1"
 			;;
 		(*)
 			errlog "too many arguments: $(($# - 1))"
@@ -341,32 +359,33 @@ function readlink_portable() {
 			;;
 	esac
 
-	readonly path
+	readonly pathname
 
-	if [ -z "$path" ]; then
-		errlog 'argument must not be empty'
-		return 9
-	fi
 
-	if [ ! -L "$path" ]; then
-		errlog "$path: not a symlink"
+	if [ ! -L "$pathname" ]; then
+		errlog "$pathname: not a symlink"
 		return 26
 	fi
+
 
 	# this is rather complicated because POSIX doesn't specifiy a proper utiltiy to read a symlink's target, only `ls`
 	# is capable of it
 
 	local ls_out
-	ls_out="$(LC_ALL=POSIX LC_CTYPE=POSIX LC_TIME=POSIX ls -dn -- "$path" && printf x)"
+
+	ls_out="$(LC_ALL=POSIX LC_CTYPE=POSIX LC_TIME=POSIX ls -dn -- "$pathname" && printf x)"
 	ls_out="${ls_out%$'\nx'}"
 
 	# removing <file mode>, <number of links>, <owner name>, <group name>, <size> and <date and time> (where both
 	# <owner name> and <group name> are their associated numeric values because of the '-n' option given to `ls`)
-	if [[ ! "$ls_out" =~ ^([^[:space:]$' \t']+[[:space:]$' \t']+[0-9]+' '+[0-9]+' '+[0-9]+' '+[0-9]+' '+[A-Za-z]+' '+[0-9]+' '+([0-9]+':'[0-9]+|[0-9]+)' '+"$path -> ") ]]; then
+	if [[ ! "$ls_out" =~ ^([^[:space:]$' \t']+[[:space:]$' \t']+[0-9]+' '+[0-9]+' '+[0-9]+' '+[0-9]+' '+[A-Za-z]+' '+[0-9]+' '+([0-9]+':'[0-9]+|[0-9]+)' '+"$pathname -> ") ]]; then
 		errlog 'emergency stop: unexpected output of ls'
 		return 123
 	fi
 	ls_out="${ls_out#"${BASH_REMATCH[1]}"}"
+
+	readonly ls_out
+
 
 	printf '%s' "$ls_out"
 }
@@ -520,16 +539,14 @@ function prompt_yes_no() {
 		(2)
 			message="$1"
 
-			if [[ ! "$2" =~ ^'default='('yes'|'no')$ ]]; then
-				errlog "$2: does not match: /^default=(yes|no)$/"
-				return 12
-			fi
-
-			if [ "$2" = 'default=yes' ]; then
-				default_is_yes=true
-			else
-				default_is_yes=false
-			fi
+			case "$2" in
+				('default=yes') default_is_yes=true  ;;
+				('default=no')  default_is_yes=false ;;
+				(*)
+					errlog "$2: invalid argument: must be either 'default=yes' or 'default=yes'"
+					return 7
+					;;
+			esac
 			;;
 		(*)
 			errlog "too many arguments: $(($# - 2))"
