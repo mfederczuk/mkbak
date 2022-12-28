@@ -43,7 +43,26 @@ export POSIXLY_CORRECT=yes POSIX_ME_HARDER=yes
 # Which removes the extra newline, but preserves any newlines that belong to the actual data we're interested in.
 
 if [ -z "${BASH_VERSION-}" ]; then
-	printf 'GNU Bash is required to execute this script\n' >&2
+	if [ "${0#/}" = "$0" ]; then # checks whether or not $0 does not start with a slash
+		argv0="$0"
+	else
+		# Rationale as to why only the basename of $0 is used for $argv0 if $0 is an absolute pathname:
+		# When an executable file with a shebang is executed via the exec family of functions (which is how shells
+		# invoke programs), then the absolute pathname of that file is passed to
+		# the (in the shebang defined) interpreter program.
+		# So when mkbak is invoked in a shell like this:
+		#
+		#         $ sh mkbak
+		#
+		# Then $0 will be an absolute pathname (e.g.: /usr/bin/local/mkbak), but the user doesn't expect error logs to
+		# show that absolute pathname --- only the program name --- which is why only the basename is used.
+
+		argv0="$(basename -- "$0" && printf x)"
+		argv0="${argv0%"$(printf '\nx')"}"
+	fi
+	readonly argv0
+
+	printf '%s: GNU Bash is required to execute this script\n' "$argv0" >&2
 	exit 1
 fi
 
