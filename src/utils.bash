@@ -37,8 +37,9 @@ function log() {
 readonly -f log
 
 # Prints the given message to standard error, along with the "origin" of the message.
-# Outside of functions, the origin is the name of the program (see function `argv0`). Inside functions, the origin is
-# the name of that function.
+#
+# Outside of functions, the origin is the name of the program (see the function `argv0`).
+# Inside functions, the origin is the name of that function.
 #
 #  $1: message
 # or
