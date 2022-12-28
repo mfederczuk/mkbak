@@ -28,8 +28,10 @@ function usage_errlog() {
 	readonly message
 
 
+	#ignorenext
+	# $argv0 is also used in 'usage.in.txt'
 	local argv0
-	argv0="$(argv0 && printf x)"
+	argv0="$(get_argv0 && printf x)"
 	argv0="${argv0%x}"
 	readonly argv0
 

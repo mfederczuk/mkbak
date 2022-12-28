@@ -4,6 +4,12 @@
 #end-ignore
 
 function cli_opt_help() {
+	#ignorenext
+	# $argv0 is used 'usage.in.txt' which is included by 'help.in.txt'
+	#ignorenext
+	# shellcheck disable=2034
+	local -r argv0="$2"
+
 	local help_message
 	help_message="$(cat <<EOF
 #include help.in.txt

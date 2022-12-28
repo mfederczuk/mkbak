@@ -368,8 +368,13 @@ function cli_options_execute() {
 			;;
 	esac
 
+	local argv0
+	argv0="$(get_argv0 && printf x)"
+	argv0="${argv0%x}"
+	readonly argv0
+
 	local -r cmd="${_cli_options_cmds[handle]}"
 
-	"$cmd" "$origin" "${args_to_pass[@]}"
+	"$cmd" "$origin" "$argv0" "${args_to_pass[@]}"
 }
 readonly -f cli_options_execute

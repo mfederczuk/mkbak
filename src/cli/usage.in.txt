@@ -1,2 +1,2 @@
-usage: $(argv0) [-t] [-N] [-i <file>] [-o <file>] [(-p <dest>)...] [<path>...]
-   or: $(argv0) ( --list-transients | --clear-transients )
+usage: $argv0 [-t] [-N] [-i <file>] [-o <file>] [(-p <dest>)...] [<path>...]
+   or: $argv0 ( --list-transients | --clear-transients )

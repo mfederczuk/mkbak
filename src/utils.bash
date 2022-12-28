@@ -38,7 +38,7 @@ readonly -f log
 
 # Prints the given message to standard error, along with the "origin" of the message.
 #
-# Outside of functions, the origin is the name of the program (see the function `argv0`).
+# Outside of functions, the origin is the name of the program (see the function `get_argv0`).
 # Inside functions, the origin is the name of that function.
 #
 #  $1: message
@@ -83,7 +83,7 @@ function errlog() {
 		if ((${#FUNCNAME[@]} > 2)); then
 			prefix="${FUNCNAME[1]}"
 		else
-			prefix="$(argv0 && printf x)"
+			prefix="$(get_argv0 && printf x)"
 			prefix="${prefix%x}"
 		fi
 		prefix+=': '
@@ -466,39 +466,70 @@ readonly -f normalize_pathname
 #endregion
 
 
-# Writes the basename or path of this script file to standard output.
+# Writes the basename or relative pathname of this script file to the standard output.
 #
-# If $0 is an absolute path, only the basename of that path is written, otherwise $0 is written without change.
-# Rationale: When an executable file with a shebang is executed via the exec family of functions (i.e.: how shells
-# invoke programs) the absolute path of that file is passed to the (in the shebang defined) interpreter program.
+# If $0 is an absolute pathname, only the basename of that pathname is written to the standard output,
+# otherwise (if $0 is a relative pathname) $0 will be normalized (see the function `normalize_path`) and then written to
+# the standard output.
+#
+# Rationale as to why only the basename of $0 is written to the standard output if it is an absolute pathname:
+# When an executable file with a shebang is executed via the exec family of functions (which is how shells
+# invoke programs), then the absolute pathname of that file is passed to
+# the (in the shebang defined) interpreter program.
+# So when mkbak is invoked in a shell simply like this:
+#
+#         $ mkbak
+#
+# Then $0 will be an absolute pathname (e.g.: /usr/bin/local/mkbak), but the user doesn't expect error logs to show
+# that absolute pathname --- only the program name --- which is why only the basename is written.
 #
 # stdout: the name of this script file
 # <https://github.com/koalaman/shellcheck/issues/2492>
 # shellcheck disable=2120
-function argv0() {
+function get_argv0() {
 	if (($# > 0)); then
 		errlog "too many arguments: $#"
 		return 4
 	fi
 
-	if [[ ! "$0" =~ ^'/' ]]; then
-		printf '%s' "$0"
+
+	if starts_with "$0" '/'; then
+		local basename
+		basename="$(basename -- "$0" && printf x)"
+		basename="${basename%$'\nx'}"
+		readonly basename
+
+		printf '%s' "$basename"
+
 		return
 	fi
 
-	local path
-	path="$(safepath "$0" && printf x)"
-	path="${path%x}"
-	readonly path
 
-	local basename
-	basename="$(basename "$path" && printf x)"
-	basename="${basename%$'\nx'}"
-	readonly basename
+	local starts_with_dot
+	starts_with_dot=false
 
-	printf '%s' "$basename"
+	if starts_with "$0" './'; then
+		starts_with_dot=true
+	fi
+
+	readonly starts_with_dot
+
+
+	local pathname
+
+	pathname="$(normalize_pathname "$0" && printf x)"
+	pathname="${pathname%x}"
+
+	if $starts_with_dot; then
+		pathname="./$pathname"
+	fi
+
+	readonly pathname
+
+
+	printf '%s' "$pathname"
 }
-readonly -f argv0
+readonly -f get_argv0
 
 
 # Prints a given message to standard error and then prompts the user for a boolean yes/no answer.
