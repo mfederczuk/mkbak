@@ -1,14 +1,70 @@
 #ignore
 # Copyright (c) 2022 Michael Federczuk
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
+
+# template for a doc comment:
+
+#v#
+ # SYNOPSIS:
+ #     TODO
+ #
+ # DESCRIPTION:
+ #     TODO
+ #
+ # OPTIONS:
+ #     TODO
+ #
+ # OPERANDS:
+ #     TODO
+ #
+ # STDIN:
+ #     TODO
+ #
+ # STDOUT:
+ #     TODO
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error.
+ #
+ # EXIT STATUS:
+ #      0  Success.
+ #
+ #     TODO
+ #
+ #     >0  Another error occurred.
+#^#
+
 #end-ignore
 
 #region logging
 
-# Prints the given message to standard error.
-#
-# $1: message (optional)
-# stderr: the given message with an appended newline or just a newline if the argument was omitted
+#v#
+ # SYNOPSIS:
+ #     log [<message>]
+ #
+ # DESCRIPTION:
+ #     Writes the operand <message> to standard error, followed by a newline character.
+ #     If the operand <message> is not given, then only the newline charcacter is written.
+ #
+ # OPERANDS:
+ #     <message>  The string to write to standard error.
+ #                If this operand is given, it must not be empty.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error or --- on success --- the operand <message> (or nothing if it wasn't
+ #     given), along with a newline character in the following format:
+ #
+ #             "%s\n", <message>
+ #
+ # EXIT STATUS:
+ #      0  Success.
+ #
+ #      4  Too many operands are given.
+ #
+ #      9  The operand <message> is an empty string.
+ #
+ #     >0  Another error occurred.
+#^#
 function log() {
 	local message
 
@@ -37,16 +93,47 @@ function log() {
 }
 readonly -f log
 
-# Prints the given message to standard error, along with the "origin" of the message.
-#
-# Outside of functions, the origin is the name of the program (see the function `get_argv0`).
-# Inside functions, the origin is the name of that function.
-#
-#  $1: message
-# or
-#  $1: '--no-origin'
-#  $2: message
-# stderr: the error message
+#v#
+ # SYNOPSIS:
+ #     errlog [--no-origin] <message>
+ #
+ # DESCRIPTION:
+ #     Writes the "origin" of the message, followed by the string ": ", the operand <message> and a newline character
+ #     all to standard error.
+ #
+ #     Outside of functions, the origin is the name of the program. (see the function `get_argv0`)
+ #     Inside of functions, the origin is the name of that function.
+ #
+ #     If the option '--no-origin' is given, then the origin and the string ": " is not written.
+ #
+ # OPTIONS:
+ #     --no-origin  Suppresses writing the origin prefix.
+ #
+ # OPERANDS:
+ #     <message>  The string to write to standard error, it must not be empty.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error or --- on success --- if the option '--no-origin' is not given, then
+ #     the origin, along with the operand <message> and a newline character in the following format:
+ #
+ #             "%s: %s\n", <origin>, <message>
+ #
+ #     If the option '--no-origin' is given, then only the operand <message>, along with a newline character in
+ #     the following format:
+ #
+ #             "%s\n", <message>
+ #
+ # EXIT STATUS:
+ #      0  Success.
+ #
+ #      3  The operand <message> is not given.
+ #
+ #      4  Too many operands are given.
+ #
+ #      9  The operand <message> is an empty string.
+ #
+ #     >0  Another error occurred.
+#^#
 function errlog() {
 	if (($# == 0)); then
 		errlog 'missing argument: [--no-origin] <message>'
@@ -276,16 +363,34 @@ readonly -f squeeze
 #endregion
 
 
-# Tests whether or not the given command exists.
-#
-# $1: command name
-# exit code: 0 if the given command exists, nonzero otherwise
+#v#
+ # SYNOPSIS:
+ #     command_exists <command_name>
+ #
+ # DESCRIPTION:
+ #     Indicates whether or not the command with the name of the operand <command_name> exists.
+ #
+ # OPERANDS:
+ #     <command_name>  The name of a command.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error.
+ #
+ # EXIT STATUS:
+ #      0  Success, the command exists.
+ #
+ #      3  The operand <command_name> is not given.
+ #
+ #      4  Too many operands are given.
+ #
+ #     >0  The command does not exist or another error occurred.
+#^#
 function command_exists() {
 	local command_name
 
 	case $# in
 		(0)
-			errlog 'missing argument: <command>'
+			errlog 'missing argument: <command_name>'
 			return 3
 			;;
 		(1)
