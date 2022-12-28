@@ -4,6 +4,36 @@
 #end-ignore
 
 function usage_errlog() {
+	local message
+
+	case $# in
+		(0)
+			errlog 'missing argument: <message>'
+			return 3
+			;;
+		(1)
+			if [ -z "$1" ]; then
+				errlog 'argument must not be empty'
+				return 9
+			fi
+
+			message="$1"
+			;;
+		(*)
+			errlog "too many arguments: $(($# - 1))"
+			return 4
+			;;
+	esac
+
+	readonly message
+
+
+	local argv0
+	argv0="$(argv0 && printf x)"
+	argv0="${argv0%x}"
+	readonly argv0
+
+
 	local usage
 	usage="$(cat <<EOF
 #include usage.in.txt
@@ -11,7 +41,8 @@ EOF
 )"
 	readonly usage
 
-	errlog "$@"
+
+	errlog --no-origin "$argv0: $message"
 	log "$usage"
 }
 readonly -f usage_errlog
