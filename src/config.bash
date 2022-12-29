@@ -13,8 +13,8 @@ else
 fi
 readonly xdg_config_home
 
-readonly config_dir_path="$xdg_config_home/mkbak"
-readonly config_file_path="$config_dir_path/mkbak.conf"
+readonly config_dir_pathname="$xdg_config_home/mkbak"
+readonly config_file_pathname="$config_dir_pathname/mkbak.conf"
 
 readonly config_key_pattern='[a-z_]+'
 
@@ -65,7 +65,7 @@ function config_read_value() {
 		return 12
 	fi
 
-	if [ ! -f "$config_file_path" ] || [ ! -r "$config_file_path" ]; then
+	if [ ! -f "$config_file_pathname" ] || [ ! -r "$config_file_pathname" ]; then
 		printf '%s' "$fallback_value"
 		return
 	fi
@@ -94,7 +94,7 @@ function config_read_value() {
 		fi
 
 		unset -v value key
-	done < "$config_file_path"
+	done < "$config_file_pathname"
 	unset -v line
 
 	printf '%s' "$fallback_value"
@@ -171,20 +171,20 @@ function config_read_integer() {
 readonly -f config_read_integer
 
 
-readonly config_key_default_input_file_path='default_input_file_path'
+readonly config_key_default_input_file_pathname='default_input_file_path'
 
-declare default_input_file_path
-default_input_file_path=$(config_read_value "$config_key_default_input_file_path")
+declare default_input_file_pathname
+default_input_file_pathname=$(config_read_value "$config_key_default_input_file_pathname")
 
-if [ -n "$default_input_file_path" ]; then
-	if [[ "$default_input_file_path" =~ ^'~'('/'.*)?$ ]]; then
-		default_input_file_path="${HOME}${BASH_REMATCH[1]}"
-	elif [[ ! "$default_input_file_path" =~ ^'/' ]]; then
-		errlog "$default_input_file_path: $config_key_default_input_file_path config key must either start with a tilde (~) or be an absolute path"
+if [ -n "$default_input_file_pathname" ]; then
+	if [[ "$default_input_file_pathname" =~ ^'~'('/'.*)?$ ]]; then
+		default_input_file_pathname="${HOME}${BASH_REMATCH[1]}"
+	elif [[ ! "$default_input_file_pathname" =~ ^'/' ]]; then
+		errlog "$default_input_file_pathname: $config_key_default_input_file_pathname config key must either start with a tilde (~) or be an absolute path"
 		exit 79
 	fi
 fi
 
 #ignorenext
 # shellcheck disable=2034
-readonly default_input_file_path
+readonly default_input_file_pathname

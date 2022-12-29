@@ -53,7 +53,7 @@ readonly -f usage_errlog
 #ignorenext
 . options.bash
 
-declare -a bak_paths=()
+declare -a bak_pathnames=()
 
 declare -a cli_option_low_prio_handles=()
 declare -a cli_option_low_prio_origins=()
@@ -172,7 +172,7 @@ for ((cli_arg_i = 0; cli_arg_i < $#; ++cli_arg_i)); do
 	pathname="$(normalize_pathname "$arg" && printf x)"
 	pathname="${pathname%x}"
 
-	bak_paths+=("$pathname")
+	bak_pathnames+=("$pathname")
 
 	unset -v pathname
 	unset -v arg
@@ -223,12 +223,12 @@ unset -v i \
 
 
 declare -i i
-for ((i = 0; i < ${#bak_paths[@]}; ++i)); do
-	declare bak_path
-	bak_path="${bak_paths[i]}"
+for ((i = 0; i < ${#bak_pathnames[@]}; ++i)); do
+	declare bak_pathname
+	bak_pathname="${bak_pathnames[i]}"
 
-	if [ -z "$bak_path" ]; then
-		if ((${#bak_paths[@]} == 1)); then
+	if [ -z "$bak_pathname" ]; then
+		if ((${#bak_pathnames[@]} == 1)); then
 			errlog 'argument must not be empty'
 		else
 			errlog "argument $((i + 1)): must not empty"
@@ -236,6 +236,6 @@ for ((i = 0; i < ${#bak_paths[@]}; ++i)); do
 		exit 9
 	fi
 
-	unset -v bak_path
+	unset -v bak_pathname
 done
 unset -v i

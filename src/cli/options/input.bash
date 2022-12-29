@@ -6,25 +6,25 @@
 # either 'default:', 'file:...' or 'stdin:'
 #ignorenext
 # shellcheck disable=2034
-declare bak_paths_input_source='default:'
+declare bak_pathnames_input_source='default:'
 
 function cli_opt_input() {
 	local -r origin="$1"
-	local path="$3"
+	local pathname="$3"
 
-	case "$path" in
+	case "$pathname" in
 		('')
 			errlog "$origin: argument must not be empty"
 			return 9
 			;;
 		('-')
-			bak_paths_input_source='stdin:'
+			bak_pathnames_input_source='stdin:'
 			;;
 		(*)
-			path="$(normalize_pathname "$path" && printf x)"
-			path="${path%x}"
+			pathname="$(normalize_pathname "$pathname" && printf x)"
+			pathname="${pathname%x}"
 
-			bak_paths_input_source="file:$path"
+			bak_pathnames_input_source="file:$pathname"
 			;;
 	esac
 }

@@ -11,9 +11,9 @@ output_archive_target="file:$(date +'%Y-%M-%d').tar.gz"
 
 function cli_opt_output() {
 	local -r origin="$1"
-	local path="$3"
+	local pathname="$3"
 
-	case "$path" in
+	case "$pathname" in
 		('')
 			errlog "$origin: argument must not be empty"
 			return 9
@@ -22,10 +22,10 @@ function cli_opt_output() {
 			output_archive_target='stdout:'
 			;;
 		(*)
-			path="$(normalize_pathname "$path" && printf x)"
-			path="${path%x}"
+			pathname="$(normalize_pathname "$pathname" && printf x)"
+			pathname="${pathname%x}"
 
-			output_archive_target="file:$path"
+			output_archive_target="file:$pathname"
 			;;
 	esac
 }

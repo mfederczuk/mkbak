@@ -5,41 +5,41 @@
 
 #ignorenext
 # shellcheck disable=2034
-declare -a copy_destination_paths=()
+declare -a copy_destination_pathnames=()
 
 function cli_opt_copy() {
 	local -r origin="$1"
-	local path="$3"
+	local pathname="$3"
 
-	if [ -z "$path" ]; then
+	if [ -z "$pathname" ]; then
 		errlog "$origin: argument must not be empty"
 		return 9
 	fi
 
 	local force_dir
 	force_dir=false
-	if [[ "$path" =~ '/'$ ]]; then
+	if [[ "$pathname" =~ '/'$ ]]; then
 		force_dir=true
 	fi
 
-	path="$(normalize_pathname "$path" && printf x)"
-	path="${path%x}"
+	pathname="$(normalize_pathname "$pathname" && printf x)"
+	pathname="${pathname%x}"
 
 	if $force_dir; then
-		path+='/'
+		pathname+='/'
 	fi
 
-	readonly path
+	readonly pathname
 
-	# avoid adding the same path twice
-	local copy_destination_path
-	for copy_destination_path in "${copy_destination_paths[@]}"; do
-		if [ "$copy_destination_path" = "$path" ]; then
+	# avoid adding the same pathname twice
+	local copy_destination_pathname
+	for copy_destination_pathname in "${copy_destination_pathnames[@]}"; do
+		if [ "$copy_destination_pathname" = "$pathname" ]; then
 			return 0
 		fi
 	done
 
-	copy_destination_paths+=("$path")
+	copy_destination_pathnames+=("$pathname")
 }
 readonly -f cli_opt_copy
 
