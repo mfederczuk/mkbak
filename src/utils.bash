@@ -591,14 +591,224 @@ function normalize_pathname() {
 }
 readonly -f normalize_pathname
 
+#v#
+ # SYNOPSIS:
+ #     resolve_pathname <pathname>
+ #
+ # DESCRIPTION:
+ #     Implements Linux path resolution (see Linux man page path_resolution(7)) and writes the results to
+ #     standard output.
+ #
+ # OPERANDS:
+ #     <pathname>  Pathname to resolve.
+ #
+ # STDOUT:
+ #     The results of
+ #
+ #             "%s:%s", <result_type>, <result_pathname>
+ #
+ #     The result type is one of the following strings:
+ #
+ #         unknown    Succesful resolution. The result pathname may not exist, be a directory or be a any type of file.
+ #                    Read and/or write access may not be given to the result pathname or its parent directory.
+ #
+ #         directory  Succesful resolution. The result pathname is an existing directory.
+ #                    Read and/or write access may not be given to the result pathname or its parent directory.
+ #
+ #         EACCESS    Failed resolution. Search permissions are missing on the result pathname. It is NOT same pathname
+ #                    pointed to by the operand <pathname>.
+ #
+ #         ENOENT     Failed resolution. The result pathname does not exist. It is NOT same pathname pointed to by
+ #                    the operand <pathname>.
+ #
+ #         ENOTDIR    Failed resolution. The result pathname is not a directory. It may or may not be the same pathname
+ #                    pointed to by the operand <pathname>.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error.
+ #
+ # EXIT STATUS:
+ #      0  Success.
+ #
+ #      3  The operand <pathname> is not given.
+ #
+ #      4  Too many operands are given.
+ #
+ #     >0  Another error occurred.
+#^#
+function resolve_pathname() {
+	local pathname
+
+	case $# in
+		(0)
+			internal_errlog 'missing argument: <pathname>'
+			return 3
+			;;
+		(1)
+			pathname="$1"
+			;;
+		(*)
+			internal_errlog "too many arguments: $(($# - 1)))"
+			return 4
+			;;
+	esac
+
+	pathname="$(normalize_pathname "$pathname" && printf x)"
+	pathname="${pathname%x}"
+
+	readonly pathname
+
+
+	case "$pathname" in
+		('')
+			printf 'ENOENT:'
+			return
+			;;
+		('/')
+			printf 'directory:/'
+			return
+			;;
+	esac
+
+
+	local force_final_component_directory
+	force_final_component_directory=false
+
+	if [[ "$pathname" =~ '/'$ ]]; then
+		force_final_component_directory=true
+	fi
+
+	readonly force_final_component_directory
+
+
+	local starting_lookup_directory
+	if starts_with "$pathname" '/'; then
+		starting_lookup_directory='/'
+	else
+		starting_lookup_directory='.'
+	fi
+	readonly starting_lookup_directory
+
+
+	local -a pathname_components
+	pathname_components=()
+
+	local current_component
+	current_component=''
+
+	local -i i
+	for ((i = 0; i < ${#pathname}; ++i)); do
+		local ch
+		ch="${pathname:i:1}"
+
+		if [ "$ch" != '/' ]; then
+			current_component+="$ch"
+		elif [ -n "$current_component" ]; then
+			pathname_components+=("$current_component")
+			current_component=''
+		fi
+
+		unset -v ch
+	done
+	unset -v i
+
+	if [ -n "$current_component" ]; then
+		pathname_components+=("$current_component")
+	fi
+
+	unset -v current_component
+
+	readonly pathname_components
+
+
+	local current_lookup_directory
+	current_lookup_directory="$starting_lookup_directory"
+
+	local -i i
+
+	for ((i = 0; i < ${#pathname_components[@]}; ++i)); do
+		local component
+		component="${pathname_components[i]}"
+
+		if [ ! -x "$current_lookup_directory" ]; then
+			printf 'EACCESS:%s' "$current_lookup_directory"
+			return
+		fi
+
+		local entry_pathname
+		case "$current_lookup_directory" in
+			('/') entry_pathname="/$component" ;;
+			('.') entry_pathname="$component"  ;;
+			(*)   entry_pathname="$current_lookup_directory/$component" ;;
+		esac
+
+		if [ -L "$entry_pathname" ]; then
+			local target_pathname
+			target_pathname="$(readlink_portable "$entry_pathname" && printf x)"
+			target_pathname="${target_pathname%x}"
+
+			if ! starts_with "$target_pathname" '/'; then
+				target_pathname="$current_lookup_directory/$target_pathname"
+			fi
+
+			result="$(resolve_pathname "$target_pathname" && printf x)"
+			result="${result%x}"
+
+			if [[ ! "$result" =~ ^[a-z]+':'(.+)$ ]]; then
+				printf '%s' "$result"
+				return
+			fi
+
+			entry_pathname="${BASH_REMATCH[1]}"
+
+			unset -v result target_pathname
+		fi
+
+		if (((i + 1) >= ${#pathname_components[@]})); then
+			local result
+			result='unknown'
+
+			if $force_final_component_directory; then
+				if [ -d "$entry_pathname" ]; then
+					result='directory'
+				else
+					result='ENOTDIR'
+				fi
+			fi
+
+			printf '%s:%s' "$result" "$entry_pathname"
+
+			return
+		fi
+
+		if [ ! -e "$entry_pathname" ]; then
+			printf 'ENOENT:%s' "$entry_pathname"
+			return
+		fi
+
+		if [ ! -d "$entry_pathname" ]; then
+			printf 'ENOTDIR:%s' "$entry_pathname"
+			return
+		fi
+
+		current_lookup_directory="$entry_pathname"
+
+		unset -v entry_pathname component
+	done
+
+	internal_errlog "unknown error: we shouldn't be here :("
+	return 125
+}
+readonly -f resolve_pathname
+
 #endregion
 
 
 # Writes the basename or relative pathname of this script file to the standard output.
 #
 # If $0 is an absolute pathname, only the basename of that pathname is written to the standard output,
-# otherwise (if $0 is a relative pathname) $0 will be normalized (see the function `normalize_path`) and then written to
-# the standard output.
+# otherwise (if $0 is a relative pathname) $0 will be normalized (see the function `normalize_pathname`) and then
+# written to the standard output.
 #
 # Rationale as to why only the basename of $0 is written to the standard output if it is an absolute pathname:
 # When an executable file with a shebang is executed via the exec family of functions (which is how shells
