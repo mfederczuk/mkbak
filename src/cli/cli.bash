@@ -229,7 +229,7 @@ for ((i = 0; i < ${#bak_paths[@]}; ++i)); do
 
 	if [ -z "$bak_path" ]; then
 		if ((${#bak_paths[@]} == 1)); then
-			errlog 'argument must not empty'
+			errlog 'argument must not be empty'
 		else
 			errlog "argument $((i + 1)): must not empty"
 		fi
