@@ -4,17 +4,18 @@
 #end-ignore
 
 declare xdg_config_home
-if [ -n "${XDG_CONFIG_HOME-}" ]; then
-	xdg_config_home="$XDG_CONFIG_HOME"
-	xdg_config_home="$(normalize_pathname "$xdg_config_home" && printf x)"
-	xdg_config_home="${xdg_config_home%x}"
-else
-	xdg_config_home="$HOME/.config"
-fi
+xdg_config_home="$(normalize_pathname "${XDG_CONFIG_HOME:-"$HOME/.config"}" && printf x)"
+xdg_config_home="${xdg_config_home%x}"
 readonly xdg_config_home
 
-readonly config_dir_pathname="$xdg_config_home/mkbak"
-readonly config_file_pathname="$config_dir_pathname/mkbak.conf"
+declare config_dir_pathname
+config_dir_pathname="$(normalize_pathname "$xdg_config_home/mkbak")"
+readonly config_dir_pathname
+
+declare config_file_pathname
+config_file_pathname="$(normalize_pathname "$config_dir_pathname/mkbak.conf")"
+readonly config_file_pathname
+
 
 readonly config_key_pattern='[a-z_]+'
 
@@ -30,17 +31,27 @@ function config_read_value() {
 			return 3
 			;;
 		(1)
+			if [ -z "$1" ]; then
+				internal_errlog 'argument: must not be empty'
+				return 9
+			fi
+
 			requested_key="$1"
 			fallback_value=''
 			;;
 		(2)
-			requested_key="$1"
+			if [ -z "$1" ]; then
+				internal_errlog 'argument 1: must not be empty'
+				return 9
+			fi
 
-			fallback_value="$2"
-			if [ -z "$fallback_value" ]; then
+			if [ -z "$2" ]; then
 				internal_errlog 'argument 2: must not be empty'
 				return 9
 			fi
+
+			requested_key="$1"
+			fallback_value="$2"
 			;;
 		(*)
 			internal_errlog "too many arguments: $(($# - 2))"
@@ -50,25 +61,17 @@ function config_read_value() {
 
 	readonly fallback_value requested_key
 
-	if [ -z "$requested_key" ]; then
-		if [ -z "$fallback_value" ]; then
-			internal_errlog 'argument must not be empty'
-		else
-			internal_errlog 'argument 1: must not be empty'
-		fi
-
-		return 9
-	fi
-
 	if [[ ! "$requested_key" =~ ^$config_key_pattern$ ]]; then
 		internal_errlog "$requested_key: does not match: /^$config_key_pattern\$/"
 		return 12
 	fi
 
+
 	if [ ! -f "$config_file_pathname" ] || [ ! -r "$config_file_pathname" ]; then
 		printf '%s' "$fallback_value"
 		return
 	fi
+
 
 	local line
 	while read -r line; do
@@ -120,6 +123,24 @@ function config_read_integer() {
 			return 3
 			;;
 		(2)
+			if [ -z "$1" ]; then
+				internal_errlog 'argument 1: must not be empty'
+				return 9
+			fi
+			if [[ ! "$1" =~ ^$config_key_pattern$ ]]; then
+				internal_errlog "$1: does not match: /^$config_key_pattern\$/"
+				return 12
+			fi
+
+			if [ -z "$2" ]; then
+				internal_errlog 'argument 2: must not be empty'
+				return 9
+			fi
+			if [[ ! "$2" =~ ^$integer_pattern$ ]]; then
+				internal_errlog "$2: not an integer"
+				return 10
+			fi
+
 			requested_key="$1"
 			fallback_value="$2"
 			;;
@@ -131,23 +152,6 @@ function config_read_integer() {
 
 	readonly fallback_value requested_key
 
-	if [ -z "$requested_key" ]; then
-		internal_errlog 'argument 1: must not be empty'
-		return 9
-	fi
-	if [[ ! "$requested_key" =~ ^$config_key_pattern$ ]]; then
-		internal_errlog "$requested_key: does not match: /^$config_key_pattern\$/"
-		return 12
-	fi
-
-	if [ -z "$fallback_value" ]; then
-		internal_errlog 'argument 2: must not be empty'
-		return 9
-	fi
-	if [[ ! "$fallback_value" =~ ^$integer_pattern$ ]]; then
-		internal_errlog "$fallback_value: not an integer"
-		return 10
-	fi
 
 	local value
 	value="$(config_read_value "$requested_key" "$fallback_value")"
