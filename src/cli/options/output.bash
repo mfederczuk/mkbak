@@ -10,12 +10,12 @@ declare output_archive_target
 output_archive_target="file:$(date +'%Y-%M-%d').tar.gz"
 
 function cli_opt_output() {
-	local -r origin="$1" argv0="$2"
+	local -r origin="$1"
 	local path="$3"
 
 	case "$path" in
 		('')
-			errlog --no-origin "$argv0: $origin: argument must not be empty"
+			errlog "$origin: argument must not be empty"
 			return 9
 			;;
 		('-')

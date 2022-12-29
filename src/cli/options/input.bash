@@ -9,12 +9,12 @@
 declare bak_paths_input_source='default:'
 
 function cli_opt_input() {
-	local -r origin="$1" argv0="$2"
+	local -r origin="$1"
 	local path="$3"
 
 	case "$path" in
 		('')
-			errlog --no-origin "$argv0: $origin: argument must not be empty"
+			errlog "$origin: argument must not be empty"
 			return 9
 			;;
 		('-')

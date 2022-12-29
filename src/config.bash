@@ -26,7 +26,7 @@ function config_read_value() {
 
 	case $# in
 		(0)
-			errlog 'missing argument: <key> [<fallback_value>]'
+			internal_errlog 'missing argument: <key> [<fallback_value>]'
 			return 3
 			;;
 		(1)
@@ -38,12 +38,12 @@ function config_read_value() {
 
 			fallback_value="$2"
 			if [ -z "$fallback_value" ]; then
-				errlog 'argument 2: must not be empty'
+				internal_errlog 'argument 2: must not be empty'
 				return 9
 			fi
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 2))"
+			internal_errlog "too many arguments: $(($# - 2))"
 			return 4
 			;;
 	esac
@@ -52,16 +52,16 @@ function config_read_value() {
 
 	if [ -z "$requested_key" ]; then
 		if [ -z "$fallback_value" ]; then
-			errlog 'argument must not be empty'
+			internal_errlog 'argument must not be empty'
 		else
-			errlog 'argument 1: must not be empty'
+			internal_errlog 'argument 1: must not be empty'
 		fi
 
 		return 9
 	fi
 
 	if [[ ! "$requested_key" =~ ^$config_key_pattern$ ]]; then
-		errlog "$requested_key: does not match: /^$config_key_pattern\$/"
+		internal_errlog "$requested_key: does not match: /^$config_key_pattern\$/"
 		return 12
 	fi
 
@@ -112,11 +112,11 @@ function config_read_integer() {
 
 	case $# in
 		(0)
-			errlog 'missing arguments: <key> <fallback_value>'
+			internal_errlog 'missing arguments: <key> <fallback_value>'
 			return 3
 			;;
 		(1)
-			errlog 'missing argument: <fallback_value>'
+			internal_errlog 'missing argument: <fallback_value>'
 			return 3
 			;;
 		(2)
@@ -124,7 +124,7 @@ function config_read_integer() {
 			fallback_value="$2"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 2))"
+			internal_errlog "too many arguments: $(($# - 2))"
 			return 4
 			;;
 	esac
@@ -132,20 +132,20 @@ function config_read_integer() {
 	readonly fallback_value requested_key
 
 	if [ -z "$requested_key" ]; then
-		errlog 'argument 1: must not be empty'
+		internal_errlog 'argument 1: must not be empty'
 		return 9
 	fi
 	if [[ ! "$requested_key" =~ ^$config_key_pattern$ ]]; then
-		errlog "$requested_key: does not match: /^$config_key_pattern\$/"
+		internal_errlog "$requested_key: does not match: /^$config_key_pattern\$/"
 		return 12
 	fi
 
 	if [ -z "$fallback_value" ]; then
-		errlog 'argument 2: must not be empty'
+		internal_errlog 'argument 2: must not be empty'
 		return 9
 	fi
 	if [[ ! "$fallback_value" =~ ^$integer_pattern$ ]]; then
-		errlog "$fallback_value: not an integer"
+		internal_errlog "$fallback_value: not an integer"
 		return 10
 	fi
 

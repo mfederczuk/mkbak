@@ -8,11 +8,11 @@
 declare -a copy_destination_paths=()
 
 function cli_opt_copy() {
-	local -r origin="$1" argv0="$2"
+	local -r origin="$1"
 	local path="$3"
 
 	if [ -z "$path" ]; then
-		errlog --no-origin "$argv0: $origin: argument must not be empty"
+		errlog "$origin: argument must not be empty"
 		return 9
 	fi
 

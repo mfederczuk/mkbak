@@ -74,14 +74,14 @@ function log() {
 			;;
 		(1)
 			if [ -z "$1" ]; then
-				errlog 'argument must not be empty'
+				internal_errlog 'argument must not be empty'
 				return 9
 			fi
 
 			message="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
@@ -95,33 +95,95 @@ readonly -f log
 
 #v#
  # SYNOPSIS:
- #     errlog [--no-origin] <message>
+ #     internal_errlog <message>
  #
  # DESCRIPTION:
- #     Writes the "origin" of the message, followed by the string ": ", the operand <message> and a newline character
- #     all to standard error.
- #
- #     Outside of functions, the origin is the name of the program. (see the function `get_argv0`)
- #     Inside of functions, the origin is the name of that function.
- #
- #     If the option '--no-origin' is given, then the origin and the string ": " is not written.
- #
- # OPTIONS:
- #     --no-origin  Suppresses writing the origin prefix.
+ #     Writes a diagnostic message, prefixed by the name of the program (see the function `get_argv0`) and the name of
+ #     the function this function was called from, to standard error.
  #
  # OPERANDS:
  #     <message>  The string to write to standard error, it must not be empty.
  #
  # STDERR:
- #     Diagnostic messages in case of an error or --- on success --- if the option '--no-origin' is not given, then
- #     the origin, along with the operand <message> and a newline character in the following format:
+ #     Diagnostic messages in case of an error or --- on success --- the name of the program, the name of the function
+ #     this function was called from and the operand <message> in the following format:
  #
- #             "%s: %s\n", <origin>, <message>
+ #             "%s: %s: %s\n", <argv0>, <outer_function_name>, <message>
  #
- #     If the option '--no-origin' is given, then only the operand <message>, along with a newline character in
- #     the following format:
+ # EXIT STATUS:
+ #      0  Success.
  #
- #             "%s\n", <message>
+ #      3  The operand <message> is not given.
+ #
+ #      4  Too many operands are given.
+ #
+ #      9  The operand <message> is an empty string.
+ #
+ #     48  This function was not executed from within another function.
+ #
+ #     >0  Another error occurred.
+#^#
+function internal_errlog() {
+	local message
+
+	case $# in
+		(0)
+			internal_errlog 'missing argument: <message>'
+			return 3
+			;;
+		(1)
+			if [ -z "$1" ]; then
+				internal_errlog 'argument must not be empty'
+				return 9
+			fi
+
+			message="$1"
+			;;
+		(*)
+			internal_errlog "too many arguments: $(($# - 1))"
+			return 4
+			;;
+	esac
+
+	readonly message
+
+
+	if ((${#FUNCNAME[@]} <= 2)); then
+		# shellcheck disable=2016
+		internal_errlog 'The function `internal_errlog` must be called from within another function'
+		return 48
+	fi
+
+	local argv0
+	argv0="$(get_argv0 && printf x)"
+	argv0="${argv0%x}"
+	readonly argv0
+
+	local outer_func_name
+	outer_func_name="${FUNCNAME[1]}"
+	readonly outer_func_name
+
+
+	log "$argv0: $outer_func_name: $message"
+}
+readonly -f internal_errlog
+
+#v#
+ # SYNOPSIS:
+ #     errlog <message>
+ #
+ # DESCRIPTION:
+ #     Writes a diagnostic message, prefixed by the name of the program (see the function `get_argv0`), to
+ #     standard error.
+ #
+ # OPERANDS:
+ #     <message>  The string to write to standard error, it must not be empty.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error or --- on success --- the name of the program and the operand <message>
+ #     in the following format:
+ #
+ #             "%s: %s\n", <argv0>, <message>
  #
  # EXIT STATUS:
  #      0  Success.
@@ -135,60 +197,36 @@ readonly -f log
  #     >0  Another error occurred.
 #^#
 function errlog() {
-	if (($# == 0)); then
-		errlog 'missing argument: [--no-origin] <message>'
-		return 3
-	fi
+	local message
 
-	local prefix message
+	case $# in
+		(0)
+			internal_errlog 'missing argument: <message>'
+			return 3
+			;;
+		(1)
+			if [ -z "$1" ]; then
+				internal_errlog 'argument must not be empty'
+				return 9
+			fi
 
-	if [ "$1" = '--no-origin' ]; then
-		case $# in
-			(1)
-				errlog 'missing argument: <message>'
-				return 3
-				;;
-			(2)
-				if [ -z "$2" ]; then
-					errlog 'argument 2: must not be empty'
-					return 9
-				fi
-
-				prefix=''
-				message="$2"
-				;;
-			(*)
-				errlog "too many arguments: $(($# - 2))"
-				return 4
-				;;
-		esac
-	else
-		if (($# > 1)); then
-			errlog "too many arguments: $(($# - 1))"
+			message="$1"
+			;;
+		(*)
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
-		fi
+			;;
+	esac
+
+	readonly message
 
 
-		if ((${#FUNCNAME[@]} > 2)); then
-			prefix="${FUNCNAME[1]}"
-		else
-			prefix="$(get_argv0 && printf x)"
-			prefix="${prefix%x}"
-		fi
-		prefix+=': '
+	local argv0
+	argv0="$(get_argv0 && printf x)"
+	argv0="${argv0%x}"
+	readonly argv0
 
-
-		if [ -z "$1" ]; then
-			errlog 'argument must not be empty'
-			return 9
-		fi
-		message="$1"
-	fi
-
-	readonly message prefix
-
-
-	log "${prefix}${message}"
+	log "$argv0: $message"
 }
 readonly -f errlog
 
@@ -206,11 +244,11 @@ function starts_with() {
 
 	case $# in
 		(0)
-			errlog 'missing arguments: <base_string> <substring>'
+			internal_errlog 'missing arguments: <base_string> <substring>'
 			return 3
 			;;
 		(1)
-			errlog 'missing argument: <substring>'
+			internal_errlog 'missing argument: <substring>'
 			return 3
 			;;
 		(2)
@@ -218,7 +256,7 @@ function starts_with() {
 			substring="$2"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 2))"
+			internal_errlog "too many arguments: $(($# - 2))"
 			return 4
 			;;
 	esac
@@ -249,15 +287,15 @@ function repeat_replace() {
 
 	case $# in
 		(0)
-			errlog 'missing arguments: <base_string> <search_substring> <replace_substring>'
+			internal_errlog 'missing arguments: <base_string> <search_substring> <replace_substring>'
 			return 3
 			;;
 		(1)
-			errlog 'missing arguments: <search_substring> <replace_substring>'
+			internal_errlog 'missing arguments: <search_substring> <replace_substring>'
 			return 3
 			;;
 		(2)
-			errlog 'missing argument: <replace_substring>'
+			internal_errlog 'missing argument: <replace_substring>'
 			return 3
 			;;
 		(3)
@@ -266,7 +304,7 @@ function repeat_replace() {
 			replace_substring="$3"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 3))"
+			internal_errlog "too many arguments: $(($# - 3))"
 			return 4
 			;;
 	esac
@@ -276,7 +314,7 @@ function repeat_replace() {
 
 	# shellcheck disable=2076
 	if [[ "$replace_substring" =~ "$search_substring" ]]; then
-		errlog "refusing to continue because the search substring ($search_substring) is contained in the replace substring ($replace_substring)"
+		internal_errlog "refusing to continue because the search substring ($search_substring) is contained in the replace substring ($replace_substring)"
 		return 13
 	fi
 
@@ -322,24 +360,24 @@ function squeeze() {
 
 	case $# in
 		(0)
-			errlog 'missing arguments: <base_string> <char>'
+			internal_errlog 'missing arguments: <base_string> <char>'
 			return 3
 			;;
 		(1)
-			errlog 'missing argument: <char>'
+			internal_errlog 'missing argument: <char>'
 			return 3
 			;;
 		(2)
 			case "$2" in
 				('')
-					errlog 'argument 2: must not be empty'
+					internal_errlog 'argument 2: must not be empty'
 					return 9
 					;;
 				(?)
 					# ok
 					;;
 				(??*)
-					errlog "$2: invalid argument: must not be more than one character long"
+					internal_errlog "$2: invalid argument: must not be more than one character long"
 					return 7
 					;;
 			esac
@@ -348,7 +386,7 @@ function squeeze() {
 			char="$2"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 2))"
+			internal_errlog "too many arguments: $(($# - 2))"
 			return 4
 			;;
 	esac
@@ -390,19 +428,19 @@ function command_exists() {
 
 	case $# in
 		(0)
-			errlog 'missing argument: <command_name>'
+			internal_errlog 'missing argument: <command_name>'
 			return 3
 			;;
 		(1)
 			if [ -z "$1" ]; then
-				errlog 'argument must not be empty'
+				internal_errlog 'argument must not be empty'
 				return 9
 			fi
 
 			command_name="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
@@ -424,7 +462,7 @@ readonly -f command_exists
 # shellcheck disable=2120
 function get_cwd() {
 	if (($# > 0)); then
-		errlog "too many arguments: $#"
+		internal_errlog "too many arguments: $#"
 		return 4
 	fi
 
@@ -447,19 +485,19 @@ function readlink_portable() {
 
 	case $# in
 		(0)
-			errlog 'missing argument: <symlink>'
+			internal_errlog 'missing argument: <symlink>'
 			return 3
 			;;
 		(1)
 			if [ -z "$1" ]; then
-				errlog 'argument must not be empty'
+				internal_errlog 'argument must not be empty'
 				return 9
 			fi
 
 			pathname="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
@@ -468,7 +506,7 @@ function readlink_portable() {
 
 
 	if [ ! -L "$pathname" ]; then
-		errlog "$pathname: not a symlink"
+		internal_errlog "$pathname: not a symlink"
 		return 26
 	fi
 
@@ -484,7 +522,7 @@ function readlink_portable() {
 	# removing <file mode>, <number of links>, <owner name>, <group name>, <size> and <date and time> (where both
 	# <owner name> and <group name> are their associated numeric values because of the '-n' option given to `ls`)
 	if [[ ! "$ls_out" =~ ^([^[:space:]$' \t']+[[:space:]$' \t']+[0-9]+' '+[0-9]+' '+[0-9]+' '+[0-9]+' '+[A-Za-z]+' '+[0-9]+' '+([0-9]+':'[0-9]+|[0-9]+)' '+"$pathname -> ") ]]; then
-		errlog 'emergency stop: unexpected output of ls'
+		internal_errlog 'emergency stop: unexpected output of ls'
 		return 123
 	fi
 	ls_out="${ls_out#"${BASH_REMATCH[1]}"}"
@@ -509,14 +547,14 @@ function normalize_pathname() {
 
 	case $# in
 		(0)
-			errlog 'missing argument: <pathname>'
+			internal_errlog 'missing argument: <pathname>'
 			return 3
 			;;
 		(1)
 			pathname="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
@@ -578,7 +616,7 @@ readonly -f normalize_pathname
 # shellcheck disable=2120
 function get_argv0() {
 	if (($# > 0)); then
-		errlog "too many arguments: $#"
+		internal_errlog "too many arguments: $#"
 		return 4
 	fi
 
@@ -634,11 +672,11 @@ function prompt_yes_no() {
 
 	case $# in
 		(0)
-			errlog 'missing arguments: <message> default=(yes|no)'
+			internal_errlog 'missing arguments: <message> default=(yes|no)'
 			return 3
 			;;
 		(1)
-			errlog 'missing argument: default=(yes|no)'
+			internal_errlog 'missing argument: default=(yes|no)'
 			return 3
 			;;
 		(2)
@@ -648,13 +686,13 @@ function prompt_yes_no() {
 				('default=yes') default_is_yes=true  ;;
 				('default=no')  default_is_yes=false ;;
 				(*)
-					errlog "$2: invalid argument: must be either 'default=yes' or 'default=yes'"
+					internal_errlog "$2: invalid argument: must be either 'default=yes' or 'default=yes'"
 					return 7
 					;;
 			esac
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 2))"
+			internal_errlog "too many arguments: $(($# - 2))"
 			return 4
 			;;
 	esac

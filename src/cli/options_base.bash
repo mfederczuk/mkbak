@@ -19,23 +19,23 @@ function cli_options_define() {
 
 	case $# in
 		(0)
-			errlog 'missing arguments: ( -<short_char> | "") --<long_id> <arg_spec> <priority> <command>'
+			internal_errlog 'missing arguments: ( -<short_char> | "") --<long_id> <arg_spec> <priority> <command>'
 			return 3
 			;;
 		(1)
-			errlog 'missing arguments: --<long_id> <arg_spec> <priority> <command>'
+			internal_errlog 'missing arguments: --<long_id> <arg_spec> <priority> <command>'
 			return 3
 			;;
 		(2)
-			errlog 'missing arguments: <arg_spec> <priority> <command>'
+			internal_errlog 'missing arguments: <arg_spec> <priority> <command>'
 			return 3
 			;;
 		(3)
-			errlog 'missing arguments: <priority> <command>'
+			internal_errlog 'missing arguments: <priority> <command>'
 			return 3
 			;;
 		(4)
-			errlog 'missing arguments: <command>'
+			internal_errlog 'missing arguments: <command>'
 			return 3
 			;;
 		(5)
@@ -46,7 +46,7 @@ function cli_options_define() {
 			cmd="$5"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 5))"
+			internal_errlog "too many arguments: $(($# - 5))"
 			return 4
 			;;
 	esac
@@ -55,7 +55,7 @@ function cli_options_define() {
 		if [[ "$short_char" =~ ^'-'(.)$ ]]; then
 			short_char="${BASH_REMATCH[1]}"
 		else
-			errlog "$short_char: does not match: /^-.$/"
+			internal_errlog "$short_char: does not match: /^-.$/"
 			return 12
 		fi
 	fi
@@ -64,7 +64,7 @@ function cli_options_define() {
 	if [[ "$long_id" =~ ^'--'([^'=']+)$ ]]; then
 		long_id="${BASH_REMATCH[1]}"
 	else
-		errlog "$long_id: does not match: /^--[^=]+$/"
+		internal_errlog "$long_id: does not match: /^--[^=]+$/"
 		return 12
 	fi
 	readonly long_id
@@ -80,7 +80,7 @@ function cli_options_define() {
 			arg_spec="optional:${arg_spec#arg_optional:}"
 			;;
 		(*)
-			errlog "$arg_spec: must be either 'no_arg', 'arg_required:<arg_name>' or 'arg_optional:<arg_name>'"
+			internal_errlog "$arg_spec: must be either 'no_arg', 'arg_required:<arg_name>' or 'arg_optional:<arg_name>'"
 			return 13
 			;;
 	esac
@@ -91,7 +91,7 @@ function cli_options_define() {
 			# ok
 			;;
 		(*)
-			errlog "$prio: must be either 'low_prio' or 'high_prio'"
+			internal_errlog "$prio: must be either 'low_prio' or 'high_prio'"
 			return 14
 			;;
 	esac
@@ -99,11 +99,11 @@ function cli_options_define() {
 
 	readonly cmd
 	if [ -z "$cmd" ]; then
-		errlog 'argument 5: must not be empty'
+		internal_errlog 'argument 5: must not be empty'
 		return 9
 	fi
 	if ! command_exists "$cmd"; then
-		errlog "$cmd: no such command"
+		internal_errlog "$cmd: no such command"
 		return 24
 	fi
 
@@ -122,21 +122,21 @@ function cli_options_find_by_short_char() {
 	local requested_char
 	case $# in
 		(0)
-			errlog 'missing argument: <short_char>'
+			internal_errlog 'missing argument: <short_char>'
 			return 3
 			;;
 		(1)
 			requested_char="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
 	readonly requested_char
 
 	if ((${#requested_char} != 1)); then
-		errlog "$requested_char: must be a single character"
+		internal_errlog "$requested_char: must be a single character"
 		return 13
 	fi
 
@@ -156,25 +156,25 @@ function cli_options_find_by_long_id() {
 	local requested_id
 	case $# in
 		(0)
-			errlog 'missing argument: <long_identifier>'
+			internal_errlog 'missing argument: <long_identifier>'
 			return 3
 			;;
 		(1)
 			requested_id="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
 	readonly requested_id
 
 	if [ -z "$requested_id" ]; then
-		errlog 'argument must not be empty'
+		internal_errlog 'argument must not be empty'
 		return 9
 	fi
 	if [[ "$requested_id" =~ '=' ]]; then
-		errlog "$requested_id: must not contain a equals character ('=')"
+		internal_errlog "$requested_id: must not contain a equals character ('=')"
 		return 13
 	fi
 
@@ -192,14 +192,14 @@ function cli_options_is_handle_valid() {
 	local handle
 	case $# in
 		(0)
-			errlog 'missing argument: <handle>'
+			internal_errlog 'missing argument: <handle>'
 			return 3
 			;;
 		(1)
 			handle="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
@@ -215,25 +215,25 @@ function cli_options_option_requires_arg() {
 	local handle
 	case $# in
 		(0)
-			errlog 'missing argument: <handle>'
+			internal_errlog 'missing argument: <handle>'
 			return 3
 			;;
 		(1)
 			handle="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
 	readonly handle
 
 	if [ -z "$handle" ]; then
-		errlog 'argument must not be empty'
+		internal_errlog 'argument must not be empty'
 		return 9
 	fi
 	if ! cli_options_is_handle_valid "$handle"; then
-		errlog 'given handle is not valid'
+		internal_errlog 'given handle is not valid'
 		return 13
 	fi
 
@@ -260,25 +260,25 @@ function cli_options_option_is_high_prio() {
 	local handle
 	case $# in
 		(0)
-			errlog 'missing argument: <handle>'
+			internal_errlog 'missing argument: <handle>'
 			return 3
 			;;
 		(1)
 			handle="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
 	readonly handle
 
 	if [ -z "$handle" ]; then
-		errlog 'argument must not be empty'
+		internal_errlog 'argument must not be empty'
 		return 9
 	fi
 	if ! cli_options_is_handle_valid "$handle"; then
-		errlog 'given handle is not valid'
+		internal_errlog 'given handle is not valid'
 		return 13
 	fi
 
@@ -300,11 +300,11 @@ function cli_options_execute() {
 	local -a args_to_pass=()
 	case $# in
 		(0)
-			errlog 'missing arguments: <handle> <origin> [<arg>]'
+			internal_errlog 'missing arguments: <handle> <origin> [<arg>]'
 			return 3
 			;;
 		(1)
-			errlog 'missing arguments: <origin> [<arg>]'
+			internal_errlog 'missing arguments: <origin> [<arg>]'
 			return 3
 			;;
 		(3)
@@ -315,32 +315,32 @@ function cli_options_execute() {
 			origin="$2"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 3))"
+			internal_errlog "too many arguments: $(($# - 3))"
 			return 4
 			;;
 	esac
 	readonly args_to_pass origin handle
 
 	if [ -z "$handle" ]; then
-		errlog 'argument 1: must not be empty'
+		internal_errlog 'argument 1: must not be empty'
 		return 9
 	fi
 	if ! cli_options_is_handle_valid "$handle"; then
-		errlog 'given handle is not valid'
+		internal_errlog 'given handle is not valid'
 		return 13
 	fi
 
 	if [ -z "$origin" ]; then
-		errlog 'argument 2: must not be empty'
+		internal_errlog 'argument 2: must not be empty'
 		return 9
 	fi
 	if [[ ! "$origin" =~ ^('-'.|'--'[^'=']+)$ ]]; then
-		errlog "$origin: does not match /^(-.|--[^=]+)$/"
+		internal_errlog "$origin: does not match /^(-.|--[^=]+)$/"
 		return 12
 	fi
 
 	if ((handle >= ${#_cli_options_arg_specs[@]} || handle >= ${#_cli_options_cmds[@]})); then
-		errlog 'option with the given handle does not exist'
+		internal_errlog 'option with the given handle does not exist'
 		return 48
 	fi
 
@@ -363,7 +363,7 @@ function cli_options_execute() {
 			# ok
 			;;
 		(*)
-			errlog "emergency stop: arg_spec of option with handle of '$handle' is invalid ($arg_spec)"
+			internal_errlog "emergency stop: arg_spec of option with handle of '$handle' is invalid ($arg_spec)"
 			return 123
 			;;
 	esac

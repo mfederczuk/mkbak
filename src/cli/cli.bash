@@ -8,19 +8,19 @@ function usage_errlog() {
 
 	case $# in
 		(0)
-			errlog 'missing argument: <message>'
+			internal_errlog 'missing argument: <message>'
 			return 3
 			;;
 		(1)
 			if [ -z "$1" ]; then
-				errlog 'argument must not be empty'
+				internal_errlog 'argument must not be empty'
 				return 9
 			fi
 
 			message="$1"
 			;;
 		(*)
-			errlog "too many arguments: $(($# - 1))"
+			internal_errlog "too many arguments: $(($# - 1))"
 			return 4
 			;;
 	esac
@@ -44,7 +44,7 @@ EOF
 	readonly usage
 
 
-	errlog --no-origin "$argv0: $message"
+	errlog "$message"
 	log "$usage"
 }
 readonly -f usage_errlog
