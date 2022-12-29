@@ -131,7 +131,6 @@ while true; do
 	else
 		printf 'Build failed with exit code %i\n' $exc >&2
 	fi
-	sleep 1
 
 	printf '\nWatching...\n' >&2
 	inotifywait --recursive -qq \
