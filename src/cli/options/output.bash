@@ -7,7 +7,7 @@
 #ignorenext
 # shellcheck disable=2034
 declare output_archive_target
-output_archive_target="file:$(date +'%Y-%M-%d').tar.gz"
+output_archive_target="file:$(date +'%Y-%m-%d').tar.gz"
 
 function cli_opt_output() {
 	local -r origin="$1"
