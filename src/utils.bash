@@ -398,6 +398,61 @@ function squeeze() {
 }
 readonly -f squeeze
 
+#v#
+ # SYNOPSIS:
+ #     trim_ws <string>
+ #
+ # DESCRIPTION:
+ #     Trims both leading and trailing whitspace characters of the operand <string> and writes the resulting string to
+ #     standard output.
+ #
+ # OPERANDS:
+ #     <string>  String to trim leading and trailing whitespace.
+ #
+ # STDOUT:
+ #     The operand <string> with all leading and trailing whitespace characters trimmed.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error.
+ #
+ # EXIT STATUS:
+ #      0  Success.
+ #
+ #      3  The operand <string> is not given.
+ #
+ #      4  Too many operands are given.
+ #
+ #     >0  Another error occurred.
+#^#
+function trim_ws() {
+	local string
+
+	case $# in
+		(0)
+			internal_errlog 'missing argument: <string>'
+			return 3
+			;;
+		(1)
+			string="$1"
+			;;
+		(*)
+			internal_errlog "too many arguments: $(($# - 1))"
+			return 4
+			;;
+	esac
+
+	readonly string
+
+
+	if [[ "$string" =~ ^[[:space:]]*([^[:space:]]+([[:space:]]+[^[:space:]]+)*)?[[:space:]]*$ ]]; then
+		printf '%s' "${BASH_REMATCH[1]}"
+		return
+	fi
+
+	printf '%s' "$string"
+}
+readonly -f trim_ws
+
 #endregion
 
 

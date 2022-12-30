@@ -70,13 +70,8 @@ function config_read_value() {
 
 	local line
 	while read -r line; do
-		if [[ "$line" =~ ^(.*?)'#'.*$ ]]; then
-			line="${BASH_REMATCH[1]}"
-
-			# strips trailing whitespace
-			if [[ "$line" =~ ^([^[:space:]]+([[:space:]]+[^[:space:]]+)*)[[:space:]]+$ ]]; then
-				line="${BASH_REMATCH[1]}"
-			fi
+		if [[ "$line" =~ ^([^'#']*)'#' ]]; then
+			line="$(trim_ws "${BASH_REMATCH[1]}")"
 		fi
 
 		local key value
