@@ -236,6 +236,11 @@ for ((i = 0; i < ${#bak_pathnames[@]}; ++i)); do
 		exit 9
 	fi
 
+	if ! starts_with "$bak_pathname" '/'; then
+		errlog "$bak_pathname: must be an absolute path"
+		exit 48
+	fi
+
 	unset -v bak_pathname
 done
 unset -v i
