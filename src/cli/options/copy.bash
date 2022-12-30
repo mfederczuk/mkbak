@@ -14,18 +14,8 @@ function cli_opt_copy() {
 		return 9
 	fi
 
-	local force_dir
-	force_dir=false
-	if [[ "$pathname" =~ '/'$ ]]; then
-		force_dir=true
-	fi
-
 	pathname="$(normalize_pathname "$pathname" && printf x)"
 	pathname="${pathname%x}"
-
-	if $force_dir; then
-		pathname+='/'
-	fi
 
 	readonly pathname
 
