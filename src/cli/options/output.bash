@@ -19,9 +19,29 @@ function cli_opt_output() {
 		('-')
 			output_archive_target='stdout:'
 			;;
+		(*'/')
+			errlog "$origin: $pathname: argument must not end with a slash"
+			return 13
+			;;
 		(*)
 			pathname="$(normalize_pathname "$pathname" && printf x)"
 			pathname="${pathname%x}"
+
+			local basename
+			basename="$(basename -- "$pathname" && printf x)"
+			basename="${basename%$'\nx'}"
+
+			if [[ ! "$basename" =~ .+('.tar.gz'|'.tgz')$ ]]; then
+				if [[ "$basename" =~ ^('.tar.gz'|'.tgz')$ ]]; then
+					errlog "$origin: $pathname: filename without prefix '.tar.gz'/'.tgz' must not be empty"
+				else
+					errlog "$origin: $pathname: filename must end with '.tar.gz' and '.tgz'"
+				fi
+
+				return 14
+			fi
+
+			unset -v basename
 
 			#ignorenext
 			# shellcheck disable=2034
