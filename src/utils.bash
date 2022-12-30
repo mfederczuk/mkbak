@@ -531,6 +531,78 @@ function get_cwd() {
 }
 readonly -f get_cwd
 
+#v#
+ # SYNOPSIS:
+ #     ensure_absolute_pathname <pathname>
+ #
+ # DESCRIPTION:
+ #     Ensures that the operand <pathname> is an absolute pathname by prefixing it with the current working directory
+ #     if it is a relative pathname. (see the function `get_cwd`)
+ #
+ # OPERANDS:
+ #     <pathname>  The pathname to turn absolute (if it is not already).
+ #
+ # STDOUT:
+ #     The operand <pathname>, ensured to be an absolute pathname.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error.
+ #
+ # EXIT STATUS:
+ #      0  Success.
+ #
+ #      3  The operand <pathname> is not given.
+ #
+ #      4  Too many operands are given.
+ #
+ #     >0  Another error occurred.
+#^#
+function ensure_absolute_pathname() {
+	local pathname
+
+	case $# in
+		(0)
+			internal_errlog 'missing argument: <pathname>'
+			return 3
+			;;
+		(1)
+			if [ -z "$1" ]; then
+				internal_errlog 'argument must not be empty'
+				return 9
+			fi
+
+			pathname="$1"
+			;;
+		(*)
+			internal_errlog "too many arguments: $(($# - 1))"
+			return 4
+			;;
+	esac
+
+	readonly pathname
+
+
+	local absolute_pathname
+
+	if starts_with "$pathname" '/'; then
+		absolute_pathname="$pathname"
+	else
+		local cwd
+		cwd="$(get_cwd && printf x)"
+		cwd="${cwd%x}"
+
+		absolute_pathname="$cwd/$pathname"
+
+		unset -v cwd
+	fi
+
+	readonly absolute_pathname
+
+
+	normalize_pathname "$absolute_pathname"
+}
+readonly -f ensure_absolute_pathname
+
 # Reads the contents of a symbolic link and writes it to standard output.
 #
 # $1: pathname of the symlink
