@@ -3,13 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
 #end-ignore
 
-declare xdg_config_home
-xdg_config_home="$(normalize_pathname "${XDG_CONFIG_HOME:-"$HOME/.config"}" && printf x)"
-xdg_config_home="${xdg_config_home%x}"
-readonly xdg_config_home
-
 declare config_dir_pathname
-config_dir_pathname="$(normalize_pathname "$xdg_config_home/mkbak")"
+config_dir_pathname="$(normalize_pathname "$XDG_CONFIG_HOME/mkbak")"
 readonly config_dir_pathname
 
 declare config_file_pathname

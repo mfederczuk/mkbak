@@ -81,20 +81,9 @@ shopt -s nullglob
 #ignorenext
 . cli/cli.bash
 
-if [ -z "${HOME-}" ]; then
-	errlog 'HOME environment variable must not be empty'
-	exit 48
-fi
-
-if ! starts_with "$HOME" '/'; then
-	errlog "$HOME: HOME environment variable must be an absolute path"
-	exit 49
-fi
-
-HOME="$(normalize_pathname "$HOME" && printf x)"
-HOME="${HOME%x}"
-readonly HOME
-export HOME
+#include env.bash
+#ignorenext
+. env.bash
 
 #include config.bash
 #ignorenext
