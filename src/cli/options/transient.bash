@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
 #end-ignore
 
-#ignorenext
-# shellcheck disable=2034
 declare transient=false
 
 
@@ -17,6 +15,8 @@ cli_options_define '-t' '--transient' 'no_arg' \
 
 
 function cli_opt_no_transient() {
+	#ignorenext
+	# shellcheck disable=2034
 	transient=false
 }
 readonly -f cli_opt_no_transient

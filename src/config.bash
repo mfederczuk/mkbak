@@ -189,6 +189,4 @@ if [ -n "$default_input_file_pathname" ]; then
 	fi
 fi
 
-#ignorenext
-# shellcheck disable=2034
 readonly default_input_file_pathname

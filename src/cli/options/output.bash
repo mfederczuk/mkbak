@@ -4,8 +4,6 @@
 #end-ignore
 
 # either 'file:...' or 'stdout:'
-#ignorenext
-# shellcheck disable=2034
 declare output_archive_target
 output_archive_target="file:$(date +'%Y-%m-%d').tar.gz"
 
@@ -25,6 +23,8 @@ function cli_opt_output() {
 			pathname="$(normalize_pathname "$pathname" && printf x)"
 			pathname="${pathname%x}"
 
+			#ignorenext
+			# shellcheck disable=2034
 			output_archive_target="file:$pathname"
 			;;
 	esac

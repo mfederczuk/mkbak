@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
 #end-ignore
 
-#ignorenext
-# shellcheck disable=2034
 declare include_user_crontab=true
 
 
@@ -17,6 +15,8 @@ cli_options_define '-n' '--crontab' 'no_arg' \
 
 
 function cli_opt_no_crontab() {
+	#ignorenext
+	# shellcheck disable=2034
 	include_user_crontab=false
 }
 readonly -f cli_opt_no_crontab

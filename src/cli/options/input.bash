@@ -4,8 +4,6 @@
 #end-ignore
 
 # either 'default:', 'file:...' or 'stdin:'
-#ignorenext
-# shellcheck disable=2034
 declare bak_pathnames_input_source='default:'
 
 function cli_opt_input() {
@@ -24,6 +22,8 @@ function cli_opt_input() {
 			pathname="$(normalize_pathname "$pathname" && printf x)"
 			pathname="${pathname%x}"
 
+			#ignorenext
+			# shellcheck disable=2034
 			bak_pathnames_input_source="file:$pathname"
 			;;
 	esac

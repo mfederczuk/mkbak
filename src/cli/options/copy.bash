@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
 #end-ignore
 
-#ignorenext
-# shellcheck disable=2034
 declare -a copy_destination_pathnames=()
 
 function cli_opt_copy() {
