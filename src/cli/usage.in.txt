@@ -1,2 +1,4 @@
+#ignorenext
+SPDX-License-Identifier: CC0-1.0
 usage: $argv0 [-t] [-N] [-i <file>] [-o <file>] [(-p <dest>)...] [<path>...]
    or: $argv0 ( --list-transients | --clear-transients )

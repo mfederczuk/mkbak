@@ -1,4 +1,6 @@
-#insert ../usage.in.txt
+#ignorenext
+SPDX-License-Identifier: CC0-1.0
+#include ../usage.in.txt
     Creates a gzipped tarball archive containing the given PATHs.
     Contents of directories are included recursively.
 
