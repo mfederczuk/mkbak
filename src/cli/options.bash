@@ -24,6 +24,10 @@
 #ignorenext
 . options/copy.bash
 
+#ignore
+
+# temporarily ignored while the transient backups feature is deactivated
+
 #include options/transient.bash
 #ignorenext
 . options/transient.bash
@@ -31,6 +35,8 @@
 #include options/exec_mode.bash
 #ignorenext
 . options/exec_mode.bash
+
+#end-ignore
 
 #include options/help.bash
 #ignorenext
