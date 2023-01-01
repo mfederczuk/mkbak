@@ -1,5 +1,5 @@
 #ignore
-# Copyright (c) 2022 Michael Federczuk
+# Copyright (c) 2023 Michael Federczuk
 # SPDX-License-Identifier: MPL-2.0 AND Apache-2.0
 #end-ignore
 
