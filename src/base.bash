@@ -88,3 +88,7 @@ shopt -s nullglob
 #include config.bash
 #ignorenext
 . config.bash
+
+#include main.bash
+#ignorenext
+. main.bash
