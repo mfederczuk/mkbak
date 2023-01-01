@@ -997,6 +997,69 @@ function get_argv0() {
 readonly -f get_argv0
 
 
+#v#
+ # SYNOPSIS:
+ #     escape_glob_pattern <glob_pattern>
+ #
+ # DESCRIPTION:
+ #     Escapes the glob pattern operand <glob_pattern> and writes it to standard output.
+ #
+ # OPERANDS:
+ #     <glob_pattern>  The glob pattern to escape.
+ #
+ # STDOUT:
+ #     The escaped glob pattern.
+ #
+ # STDERR:
+ #     Diagnostic messages in case of an error.
+ #
+ # EXIT STATUS:
+ #      0  Success.
+ #
+ #      3  The operand <string> is not given.
+ #
+ #      4  Too many operands are given.
+ #
+ #     >0  Another error occurred.
+ #
+ # SEE ALSO:
+ #     glob(7)
+#^#
+function escape_glob_pattern() {
+	local glob_pattern
+
+	case $# in
+		(0)
+			internal_errlog 'missing argument: <glob_pattern>'
+			return 3
+			;;
+		(1)
+			glob_pattern="$1"
+			;;
+		(*)
+			internal_errlog "too many arguments: $(($# - 1))"
+			return 4
+			;;
+	esac
+
+	readonly glob_pattern
+
+
+	local escaped_glob_pattern
+	escaped_glob_pattern="$glob_pattern"
+
+	escaped_glob_pattern="${escaped_glob_pattern//'?'/'\?'}"
+	escaped_glob_pattern="${escaped_glob_pattern//'*'/'\*'}"
+	escaped_glob_pattern="${escaped_glob_pattern//'['/'\['}"
+
+	readonly escaped_glob_pattern
+
+
+	printf '%s' "$escaped_glob_pattern"
+}
+readonly -f escape_glob_pattern
+
+
 # Prints a given message to standard error and then prompts the user for a boolean yes/no answer.
 # The given message should end with a question mark but should not contain any trailing whitespace or an "input hint"
 # that most of the time takes a form of "(y/n)", "[Y/n]" or "[y/N]" as it will be added automatically.
