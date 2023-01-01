@@ -4,6 +4,12 @@
 
 # declare these variables so that during development, ShellCheck doesn't issue warnings
 
+declare -i exc_feedback_prompt_abort
+
+declare -i exc_error_gnu_tar_required \
+           exc_error_input_file_malformed \
+           exc_error_no_bak_pathnames
+
 declare bak_pathnames_input_source
 declare output_archive_target
 declare include_user_crontab
@@ -27,7 +33,7 @@ else
 fi
 if [[ ! "$tar_version_info" =~ ^'tar (GNU tar)' ]]; then
 	errlog "GNU tar is required"
-	exit 49
+	exit $exc_error_gnu_tar_required
 fi
 unset -v tar_version_info
 
@@ -112,7 +118,7 @@ function read_pathnames_from_input() {
 
 				if [ -n "$substring_after_tilde" ] && ! starts_with "$substring_after_tilde" '/'; then
 					errlog "$input_source_name:$row: $line: a leading tilde ('~') must be followed by either nothing or a slash"
-					exit 48
+					exit $exc_error_input_file_malformed
 				fi
 
 				line="${HOME}${substring_after_tilde}"
@@ -122,7 +128,7 @@ function read_pathnames_from_input() {
 			('$'*)
 				if [[ ! "$line" =~ ^'$'([A-Za-z_][A-Za-z0-9_]*)([^A-Za-z0-9_].*)?$ ]]; then
 					errlog "$input_source_name:$row: $line: a leading dollar ('$') must be followed by a valid variable name"
-					exit 48
+					exit $exc_error_input_file_malformed
 				fi
 
 
@@ -132,12 +138,12 @@ function read_pathnames_from_input() {
 
 				if [[ ! "$var_name" =~ ^[A-Z_][A-Z0-9_]*$ ]]; then
 					errlog "$input_source_name:$row: $var_name: variable names must not contain lowercase letters"
-					exit 48
+					exit $exc_error_input_file_malformed
 				fi
 
 				if [ -n "$substring_after_var_name" ] && ! starts_with "$substring_after_var_name" '/'; then
 					errlog "$input_source_name:$row: $line: a leading variable must be followed by either nothing or a slash"
-					exit 48
+					exit $exc_error_input_file_malformed
 				fi
 
 
@@ -146,12 +152,12 @@ function read_pathnames_from_input() {
 
 				if [ -z "$var_value" ]; then
 					errlog "$input_source_name:$row: $var_name: environment variable must not be unset or empty"
-					exit 48
+					exit $exc_error_input_file_malformed
 				fi
 
 				if ! starts_with "$var_value" '/'; then
 					errlog "$input_source_name:$row: $var_value: value of environment variable $var_name must be an absolute path"
-					exit 48
+					exit $exc_error_input_file_malformed
 				fi
 
 
@@ -168,7 +174,7 @@ function read_pathnames_from_input() {
 
 		if ! starts_with "$line" '/'; then
 			errlog "$input_source_name:$row: $line: path must be absolute"
-			exit 48
+			exit $exc_error_input_file_malformed
 		fi
 
 		bak_pathnames+=("$line")
@@ -273,7 +279,7 @@ for bak_pathname in "${bak_pathnames[@]}"; do
 				;;
 			(32)
 				log 'Aborting.'
-				exit 50
+				exit $exc_feedback_prompt_abort
 				;;
 			(*)
 				exit $exc
@@ -338,7 +344,7 @@ if $include_user_crontab; then
 					;;
 				(32)
 					log 'Aborting.'
-					exit 50
+					exit $exc_feedback_prompt_abort
 					;;
 				(*)
 					exit $exc
@@ -368,7 +374,7 @@ fi
 
 if ((${#bak_pathnames[@]} == 0)); then
 	errlog 'no paths to backup given'
-	exit 50
+	exit $exc_error_no_bak_pathnames
 fi
 
 #region checking output file
@@ -424,7 +430,7 @@ case "$output_archive_target" in
 						;;
 					(32)
 						log 'Aborting.'
-						exit 50
+						exit $exc_feedback_prompt_abort
 						;;
 					(*)
 						exit $exc

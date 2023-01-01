@@ -77,6 +77,10 @@ shopt -s nullglob
 #ignorenext
 . version.bash
 
+#include exc.bash
+#ignorenext
+. exc.bash
+
 #include cli/cli.bash
 #ignorenext
 . cli/cli.bash

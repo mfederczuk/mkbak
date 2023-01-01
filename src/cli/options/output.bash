@@ -21,7 +21,9 @@ function cli_opt_output() {
 			;;
 		(*'/')
 			errlog "$origin: $pathname: argument must not end with a slash"
-			return 13
+			#ignorenext
+			# shellcheck disable=2154,2086
+			return $exc_usage_argument_must_not_end_with_slash
 			;;
 		(*)
 			pathname="$(normalize_pathname "$pathname" && printf x)"
@@ -38,7 +40,9 @@ function cli_opt_output() {
 					errlog "$origin: $pathname: filename must end with '.tar.gz' and '.tgz'"
 				fi
 
-				return 14
+				#ignorenext
+				# shellcheck disable=2154,2086
+				return $exc_usage_output_filename_must_be_non_empty_gzipped_tarball
 			fi
 
 			unset -v basename

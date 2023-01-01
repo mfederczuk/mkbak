@@ -5,12 +5,16 @@
 
 if [ -z "${HOME-}" ]; then
 	errlog 'HOME environment variable must not be unset or empty'
-	exit 48
+	#ignorenext
+	# shellcheck disable=2154,2086
+	exit $exc_error_env_var_must_not_be_unset_or_empty
 fi
 
 if ! starts_with "$HOME" '/'; then
 	errlog "$HOME: HOME environment variable must be an absolute path"
-	exit 49
+	#ignorenext
+	# shellcheck disable=2154,2086
+	exit $exc_error_env_var_must_be_absolute_pathname
 fi
 
 HOME="$(normalize_pathname "$HOME" && printf x)"
@@ -34,7 +38,9 @@ for var_name in "${!var_names_with_default_values[@]}"; do
 
 	if [ -n "$pathname" ] && ! starts_with "$pathname" '/'; then
 		errlog "$pathname: $var_name environment variable must be an absolute path"
-		exit 49
+		#ignorenext
+		# shellcheck disable=2086
+		exit $exc_error_env_var_must_be_absolute_pathname
 	fi
 
 	if [ -z "$pathname" ]; then
