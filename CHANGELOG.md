@@ -1,5 +1,5 @@
 <!--
-  Copyright (c) 2022 Michael Federczuk
+  Copyright (c) 2023 Michael Federczuk
   SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 

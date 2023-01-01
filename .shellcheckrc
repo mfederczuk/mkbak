@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: CC0-1.0
+
+external-sources=true
+
+enable=avoid-nullary-conditions
+enable=deprecate-which
+
+source-path=src
+source-path=src/cli
+source-path=src/cli/options

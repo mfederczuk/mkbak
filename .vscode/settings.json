@@ -1,0 +1,6 @@
+{
+	"shellcheck.useWorkspaceRootAsCwd": true,
+	"cSpell.words": [
+		"mkbak",
+	],
+}
